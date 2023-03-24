@@ -13,7 +13,7 @@ def main():
         print(f"Reason: {err}")
         sys.exit()
 
-    target_host = "localhost"
+    target_host = "0.0.0.0"
     target_port = 32000
     addr = (target_host, target_port)
     s.bind(addr)
