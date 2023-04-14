@@ -3,15 +3,18 @@ import socket
 import sys
 from threading import Thread
 
+logging.basicConfig(encoding="utf-8", level=logging.DEBUG)
+log = logging
+
 
 def main():
     try:
         # create a TCP socket (SOCK_STREAM)
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0)
-        logging.info("Socket created")
+        log.info("Socket created")
     except socket.error as err:
-        logging.error("Error during creation of the socket")
-        logging.info(f"Reason: {err}")
+        log.error("Error during creation of the socket")
+        log.info(f"Reason: {err}")
         sys.exit()
 
     target_host = "0.0.0.0"
@@ -23,17 +26,16 @@ def main():
 
     c_sockets = []
     while True:
-        logging.info("Waiting for incoming connection...")
+        log.info("Waiting for incoming connection...")
         c_sock, _ = s.accept()
         c_sockets.append(c_sock)
         c_name = c_sock.recv(200).decode()
-        logging.info(f"{c_name} joined the chat")
+        log.info(f"{c_name} joined the chat")
         t = Thread(
             target=client_management,
             kwargs={"name": c_name, "sock": c_sock, "sockets": c_sockets},
         )
         t.start()
-
     s.close()
 
 
@@ -41,7 +43,7 @@ def client_management(name, sock, sockets):
     msg = "x"
     while msg.lower() != "end":
         msg = sock.recv(200).decode()
-        logging.info(msg)
+        log.info(f"{name} > {msg}")
         if msg.lower() != "end":
             for c_socket in sockets:
                 if c_socket != sock:
@@ -51,7 +53,7 @@ def client_management(name, sock, sockets):
                         pass
     sockets.remove(sock)
     msg = f"{name}> leaves the chat"
-    logging.warning(msg)
+    log.warning(msg)
     for c_socket in sockets:
         c_socket.send(msg.encode())
     sock.close()
