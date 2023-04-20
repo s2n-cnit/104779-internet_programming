@@ -48,7 +48,7 @@ def client_management(name, sock, sockets):
             for c_socket in sockets:
                 if c_socket != sock:
                     try:
-                        c_socket.send(f"{name}> {msg}".encode())
+                        c_socket.send(f"{name} > {msg}".encode())
                     except OSError:
                         pass
     sockets.remove(sock)

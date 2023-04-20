@@ -1,12 +1,7 @@
 from __future__ import annotations
 
-from threading import Thread
-
-import click
-from config import Config
 from logger import Log
 from socket_extended import DEFAULT_HOST, DEFAULT_PORT, SocketExtended
-from ui import UI
 
 
 class Client(SocketExtended):
@@ -36,31 +31,3 @@ class Client(SocketExtended):
         self.__port: int = port
         self.__name = name
         self._socket.send(name.encode())
-
-
-@click.command()
-@click.option(
-    "-c",
-    "--config",
-    help="The configuration file must be in YAML format",
-)
-@click.option("-n", "--name", help="Your name in the chat", type=str)
-@click.option("-s", "--host", help="Hostname (or IP) of the Chat Room Server", type=str)
-@click.option("-p", "--port", help="TCP port of the Chat Room Server", type=int)
-def main(config: str, name: str, host: str, port: int) -> None:
-    log: Log = Log(filename="yacr-client.log")
-
-    cfg: Config = Config(
-        log=log,
-        path=config,
-        data={"name": name, "server.host": host, "server.port": port},
-    )
-
-    client: Client = Client(log=log)
-    client.start(name=cfg.name, host=cfg.host, port=cfg.port)
-
-    ui: UI = UI(socket=client, log=log, name=cfg.name)
-    ui.run()
-
-
-main()

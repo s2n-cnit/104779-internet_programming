@@ -5,8 +5,6 @@ from socket import socket as Socket
 from threading import Thread
 from typing import List
 
-import click
-from config import Config
 from logger import Log
 from socket_extended import DEFAULT_HOST, DEFAULT_PORT, SocketExtended
 
@@ -62,28 +60,3 @@ class Server(SocketExtended):
                     client_socket.send(message.encode())
                 except OSError:
                     pass
-
-
-@click.command()
-@click.option(
-    "-c",
-    "--config",
-    default="server.yaml",
-    help="The configuration file must be in YAML format",
-)
-@click.option("-s", "--host", help="Hostname (or IP) of the Chat Room Server", type=str)
-@click.option("-p", "--port", help="TCP port of the Chat Room Server", type=int)
-def main(config: str, host: str, port: int) -> None:
-    log: Log = Log(filename="yacr-server.log")
-
-    cfg: Config = Config(
-        log=log,
-        path=config,
-        data={"server.host": host, "server.port": port},
-    )
-
-    server: Server = Server(log=log)
-    server.start(host=cfg.host, port=cfg.port)
-
-
-main()
