@@ -63,6 +63,7 @@ Type \"end\" to terminate.
             charset="utf-8",
             decode_responses=True,
         )
+        self.__publish(type="!", message="joins the chat")
 
     def run(self: UI) -> None:
         t: Thread = Thread(target=self.__write)
@@ -70,21 +71,24 @@ Type \"end\" to terminate.
         t.start()
         self.__app.run()
 
-    def __accept(self, _: any) -> None:
-        if self.__input_field.text.lower().strip() == "end":
-            sys.exit(0)
+    def __publish(self: UI, type: str, message: str) -> None:
         try:
             self.__redis.publish(
                 "yact",
-                json.dumps(
-                    dict(name=self.__config.name, message=self.__input_field.text)
-                ),
+                json.dumps(dict(name=self.__config.name, type=type, message=message)),
             )
         except ConnectionError as conn_err:
             self.__log.exception(
                 f"Connection error with pubsub system located at {self.__config.host}:{self.__config.port}",
                 conn_err,
             )
+
+    def __accept(self, _: any) -> None:
+        if self.__input_field.text.lower().strip() == "end":
+            self.__publish(type="!", message="leaves the chat")
+            sys.exit(0)
+        else:
+            self.__publish(type=">", message=self.__input_field.text)
 
     def __write(self: UI) -> None:
         while True:
@@ -102,8 +106,7 @@ Type \"end\" to terminate.
                     if isinstance(data, int):
                         continue
                     data = json.loads(data)
-                    # self.__redis.zincrby("data_scoreboard", 1, data)
-                    new_text = f'{self.__output_field.text}\n{data["name"]} > {data["message"]}'
+                    new_text = f'{self.__output_field.text}\n{data["name"]} {data["type"]} {data["message"]}'
                 self.__output_field.buffer.document = Document(
                     text=new_text, cursor_position=len(new_text)
                 )
