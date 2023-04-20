@@ -52,7 +52,7 @@ def client_management(name, sock, sockets):
                     except OSError:
                         pass
     sockets.remove(sock)
-    msg = f"{name}> leaves the chat"
+    msg = f"{name} leaves the chat"
     log.warning(msg)
     for c_socket in sockets:
         c_socket.send(msg.encode())
