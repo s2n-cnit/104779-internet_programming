@@ -21,7 +21,7 @@ def cli():
 @click.option("-s", "--host", help="Hostname (or IP) of the Chat Room Server", type=str)
 @click.option("-p", "--port", help="TCP port of the Chat Room Server", type=int)
 def start_client(config: str, name: str, host: str, port: int) -> None:
-    log: Log = Log(filename="yacr-client.log")
+    log: Log = Log(filename="log/yacr-client.log")
 
     cfg: Config = Config(
         log=log,
@@ -46,7 +46,7 @@ def start_client(config: str, name: str, host: str, port: int) -> None:
 @click.option("-s", "--host", help="Hostname (or IP) of the Chat Room Server", type=str)
 @click.option("-p", "--port", help="TCP port of the Chat Room Server", type=int)
 def start_server(config: str, host: str, port: int) -> None:
-    log: Log = Log(filename="yacr-server.log")
+    log: Log = Log(filename="log/yacr-server.log")
 
     cfg: Config = Config(
         log=log,
