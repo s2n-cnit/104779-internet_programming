@@ -7,8 +7,10 @@
 	],
 	"settings": {
 		"cSpell.words": [
+			"pglet",
 			"REUSEADDR",
-			"terr"
+			"terr",
+			"yacr"
 		],
 		"[python]": {
 			"editor.defaultFormatter": "ms-python.black-formatter"

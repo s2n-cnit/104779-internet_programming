@@ -74,7 +74,7 @@ Type \"end\" to terminate.
     def __publish(self: UI, type: str, message: str) -> None:
         try:
             self.__redis.publish(
-                "yact",
+                "yacr",
                 json.dumps(dict(name=self.__config.name, type=type, message=message)),
             )
         except ConnectionError as conn_err:
@@ -94,7 +94,7 @@ Type \"end\" to terminate.
         while True:
             try:
                 sub = self.__redis.pubsub()
-                sub.subscribe("yact")
+                sub.subscribe("yacr")
             except redis.exceptions.ConnectionError as conn_err:
                 self.__log.exception(
                     f"Connection error with pubsub system located at {self.__config.host}:{self.__config.port}",
