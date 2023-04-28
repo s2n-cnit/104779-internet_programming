@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from socket import SO_REUSEADDR, SOL_SOCKET
 from socket import socket as Socket
 from threading import Thread
@@ -29,9 +30,10 @@ class Server(SocketExtended):
             client_socket, _ = self._socket.accept()
             self.__client_sockets.append(client_socket)
             client_name = client_socket.recv(200).decode()
-            message = f"{client_name} joined the chat"
+            d = datetime.now()
+            message = f"{client_name} ({d}) joined the chat"
             self._log.success(message)
-            self.__dispatch_to_others(client_socket, message)
+            self.__dispatch_to_others(message)
             t: Thread = Thread(
                 target=self.__process,
                 kwargs={"name": client_name, "socket": client_socket},
@@ -40,23 +42,27 @@ class Server(SocketExtended):
             t.start()
 
     def __process(self: Server, name: str, socket: Socket) -> None:
-        msg: str = "x"
-        while msg != "":
+        while True:
             msg = socket.recv(200).decode()
-            if msg != "":
+            if msg == "end":
+                self.__client_sockets.remove(socket)
+                socket.close()
+                break
+            else:
+                d = datetime.now()
                 self._log.success(f'{name} sends the message "{msg}"')
-                self.__dispatch_to_others(socket, f"{name} > {msg}")
-        self.__client_sockets.remove(socket)
+                self.__dispatch_to_others(f"{name} ({d})> {msg}")
         msg = f"{name} leaves the chat"
         self._log.warning(msg)
         for client_socket in self.__client_sockets:
-            client_socket.send(msg.encode())
-        socket.close()
+            try:
+                client_socket.send(msg.encode())
+            except BrokenPipeError:
+                pass
 
-    def __dispatch_to_others(self: Server, socket: Socket, message: str) -> None:
+    def __dispatch_to_others(self: Server, message: str) -> None:
         for client_socket in self.__client_sockets:
-            if client_socket != socket:
-                try:
-                    client_socket.send(message.encode())
-                except OSError:
-                    pass
+            try:
+                client_socket.send(message.encode())
+            except OSError:
+                pass

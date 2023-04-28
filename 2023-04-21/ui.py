@@ -65,15 +65,10 @@ Type \"end\" to terminate.
         self.__app.run()
 
     def __accept(self: UI, _: any) -> None:
-        if self.__input_field.text.lower().strip() == "end":
+        try:
+            self.__socket.send(self.__input_field.text.encode())
+        except BrokenPipeError:
             sys.exit(0)
-        new_text = (
-            f"{self.__output_field.text}\n{self.__name} > {self.__input_field.text}"
-        )
-        self.__output_field.buffer.document = Document(
-            text=new_text, cursor_position=len(new_text)
-        )
-        self.__socket.send(self.__input_field.text.encode())
 
     def __write(self: UI) -> None:
         msg: str = None

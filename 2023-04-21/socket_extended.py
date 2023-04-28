@@ -19,5 +19,6 @@ class SocketExtended:
             self._log.success("Socket created")
             self.send = self._socket.send
             self.recv = self._socket.recv
+            self.close = self._socket.close
         except SocketError as socket_err:
             self._log.exception("Error during creation of the socket", error=socket_err)

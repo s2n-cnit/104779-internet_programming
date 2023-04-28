@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime
 from threading import Thread
 
 import redis
@@ -66,17 +67,39 @@ Type \"end\" to terminate.
         self.__publish(type="!", message="joins the chat")
 
     def run(self: UI) -> None:
-        t: Thread = Thread(target=self.__write)
+        t: Thread = Thread(target=self.__write, kwargs={"private": False})
         t.daemon = True
         t.start()
+        t_private: Thread = Thread(target=self.__write, kwargs={"private": True})
+        t_private.daemon = True
+        t_private.start()
         self.__app.run()
 
     def __publish(self: UI, type: str, message: str) -> None:
         try:
-            self.__redis.publish(
-                "yacr",
-                json.dumps(dict(name=self.__config.name, type=type, message=message)),
-            )
+            message = message.strip()
+            if message != "":
+                if message.startswith("@"):
+                    message = message[1:]
+                    c = message.split(" ")
+                    message = " ".join(c[1:])
+                    topic = [f"yacr-{c[0]}", f"yacr-{self.__config.name}"]
+                    type = ["*", f"*{c[0]}"]
+                else:
+                    topic = ["yacr"]
+                    type = [type]
+                for i, tp in enumerate(topic):
+                    self.__redis.publish(
+                        tp,
+                        json.dumps(
+                            dict(
+                                name=self.__config.name,
+                                type=type[i],
+                                message=message,
+                                time=str(datetime.now()),
+                            )
+                        ),
+                    )
         except ConnectionError as conn_err:
             self.__log.exception(
                 f"Connection error with pubsub system located at {self.__config.host}:{self.__config.port}",
@@ -90,11 +113,14 @@ Type \"end\" to terminate.
         else:
             self.__publish(type=">", message=self.__input_field.text)
 
-    def __write(self: UI) -> None:
+    def __write(self: UI, private: bool) -> None:
         while True:
             try:
                 sub = self.__redis.pubsub()
-                sub.subscribe("yacr")
+                if private:
+                    sub.subscribe(f"yacr-{self.__config.name}")
+                else:
+                    sub.subscribe("yacr")
             except redis.exceptions.ConnectionError as conn_err:
                 self.__log.exception(
                     f"Connection error with pubsub system located at {self.__config.host}:{self.__config.port}",
@@ -106,7 +132,7 @@ Type \"end\" to terminate.
                     if isinstance(data, int):
                         continue
                     data = json.loads(data)
-                    new_text = f'{self.__output_field.text}\n{data["name"]} {data["type"]} {data["message"]}'
-                self.__output_field.buffer.document = Document(
-                    text=new_text, cursor_position=len(new_text)
-                )
+                    new_text = f'{self.__output_field.text}\n{data["name"]} {data["type"]} {data["message"]} at {data["time"]}'
+                    self.__output_field.buffer.document = Document(
+                        text=new_text, cursor_position=len(new_text)
+                    )
