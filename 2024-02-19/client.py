@@ -28,10 +28,10 @@ def main():  # sourcery skip: extract-duplicate-method
         print(f"Details: {terr}")
         sys.exit()
 
-    # req = 'GET / HTTP/1.0\r\n\r\n'
-    # s.send(req.encode())
-    # d = s.recv(1000000)
-    # print(f"Data received {d}")
+    req = "Hello from client"
+    s.send(req.encode())
+    d = s.recv(100000)
+    print(f"Data received {d}")
 
     # out = open("response.html", "w")
     # out.write(d.decode())
