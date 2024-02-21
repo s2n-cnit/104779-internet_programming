@@ -4,6 +4,23 @@ from threading import Thread
 
 
 def main():
+    """
+    Create a TCP socket, bind it to a target host and port, listen for
+    incoming connections,
+    and manage client connections in separate threads.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    Examples:
+        >>> main()
+        Alice joins the chat
+        Bob joins the chat
+        ...
+    """
     try:
         # create a TCP socket (SOCK_STREAM)
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0)
@@ -33,6 +50,28 @@ def main():
 
 
 def client_management(name, sock, addr):
+    """
+    Manage the communication with a client by receiving messages
+    from the client,
+    printing them along with the client's name, and closing the socket
+    when the client leaves.
+
+    Args:
+        name (str): The name of the client.
+        sock (socket.socket): The socket object representing the client
+        connection.
+        addr (tuple): The address of the client.
+
+    Returns:
+        None
+
+    Examples:
+        >>> client_management("Alice", sock, addr)
+        Alice > Hello
+        Alice > How are you?
+        ...
+        Alice leaves the chat
+    """
     msg = "x"
     while msg != "end":
         msg = sock.recv(200).decode()

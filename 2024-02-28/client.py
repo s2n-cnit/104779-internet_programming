@@ -5,6 +5,30 @@ import yaml
 
 
 def main(config_file="config.yaml"):
+    """
+    Connects to a server using a TCP socket and sends messages to the server.
+
+    Args:
+        config_file (str, optional): The path to the configuration file.
+        Defaults to "config.yaml".
+
+    Raises:
+        ConnectionRefusedError: If the connection to the server is refused.
+        TimeoutError: If a timeout occurs during the connection to the server.
+
+    Returns:
+        None
+
+    Examples:
+        >>> main()
+        Socket created
+        ('localhost', 8080) MyName
+        Message: Hello
+        Message: World
+        Message: end
+        Connection closed
+    """
+
     try:
         # create a TCP socket (SOCK_STREAM)
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0)
@@ -39,5 +63,22 @@ def main(config_file="config.yaml"):
 
 
 def manage_exception(msg, target):
+    """
+    Print an error message along with a target and exit the program.
+
+    Args:
+        msg (str): The error message.
+        target (str): The target of the error.
+
+    Returns:
+        None
+
+    Raises:
+        SystemExit: Always raises SystemExit to exit the program.
+
+    Examples:
+        >>> manage_exception("Error", "file.txt")
+        Error:file.txt
+    """
     print(f"{msg}:{target}")
     sys.exit()
