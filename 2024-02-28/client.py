@@ -4,7 +4,7 @@ import sys
 import yaml
 
 
-def main():
+def main(config_file="config.yaml"):
     try:
         # create a TCP socket (SOCK_STREAM)
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0)
@@ -15,7 +15,7 @@ def main():
 
     print("Socket created")
 
-    config = yaml.safe_load(open("config.yaml", "r"))
+    config = yaml.safe_load(open(config_file, "r"))
     addr = (config["server"]["host"], config["server"]["port"])
     name = config["name"]
 
@@ -41,6 +41,3 @@ def main():
 def manage_exception(msg, target):
     print(f"{msg}:{target}")
     sys.exit()
-
-
-main()
