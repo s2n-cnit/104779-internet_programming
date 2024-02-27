@@ -1,84 +1,46 @@
+import json
 import socket
-import sys
+from threading import Lock, Thread
 
-import yaml
+from data import server_addr
+from utils import manage_exception
+
+lock = Lock()
 
 
-def main(config_file="config.yaml"):
-    """
-    Connects to a server using a TCP socket and sends messages to the server.
-
-    Args:
-        config_file (str, optional): The path to the configuration file.
-        Defaults to "config.yaml".
-
-    Raises:
-        ConnectionRefusedError: If the connection to the server is refused.
-        TimeoutError: If a timeout occurs during the connection to the server.
-
-    Returns:
-        None
-
-    Examples:
-        >>> main()
-        Socket created
-        ('localhost', 8080) MyName
-        Message: Hello
-        Message: World
-        Message: end
-        Connection closed
-    """
-
+def main():
     try:
         # create a TCP socket (SOCK_STREAM)
         s = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0)
+        s.connect(server_addr)
+        name = input("Name: ")
+        s.send(name.encode())
+        Thread(
+            target=recv_manager,
+            kwargs={"sock": s},
+        ).start()
+        msg = "x"
+        while msg != "end":
+            lock.acquire()
+            msg = input("Message: ")
+            lock.release()
+            s.send(msg.encode())
+        print("Connection closed")
+        s.close()
+    except ConnectionRefusedError as err:
+        manage_exception("connection refused from the server", err)
+    except TimeoutError as err:
+        manage_exception("timeout expiration during connection to the server", err)
     except socket.error as err:
-        print("Error during creation of the socket")
-        print(f"Reason: {err}")
-        sys.exit()
-
-    print("Socket created")
-
-    config = yaml.safe_load(open(config_file, "r"))
-    addr = (config["server"]["host"], config["server"]["port"])
-    name = config["name"]
-
-    print(addr, name)
-
-    try:
-        s.connect(addr)
-    except ConnectionRefusedError:
-        manage_exception("Connection refused from the server", addr)
-    except TimeoutError:
-        manage_exception("Timeout error during connection to the server", addr)
-
-    s.send(name.encode())
-    msg = "x"
-    while msg != "end":
-        msg = input("Message: ")
-        s.send(msg.encode())
-
-    print("Connection closed")
-    s.close()
+        manage_exception("socket creation", err)
 
 
-def manage_exception(msg, target):
-    """
-    Print an error message along with a target and exit the program.
+def recv_manager(sock):
+    while True:
+        d = json.loads(sock.recv(10000).decode())
+        lock.acquire()
+        print(f"{d['name']} >", d["msg"])
+        lock.release()
 
-    Args:
-        msg (str): The error message.
-        target (str): The target of the error.
 
-    Returns:
-        None
-
-    Raises:
-        SystemExit: Always raises SystemExit to exit the program.
-
-    Examples:
-        >>> manage_exception("Error", "file.txt")
-        Error:file.txt
-    """
-    print(f"{msg}:{target}")
-    sys.exit()
+main()
