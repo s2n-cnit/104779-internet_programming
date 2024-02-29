@@ -1,4 +1,3 @@
 server:
   host: localhost
   port: 32001
-name: Alice
