@@ -19,7 +19,7 @@ def main(config: str, name: str, host: str, port: int) -> None:
     cfg: Config = Config(
         log=log,
         path=config,
-        data={"name": name, "server.host": host, "server.port": port},
+        data={"name": name, "server": {"host": host, "port": port}},
     )
 
     ui: UI = UI(log=log, config=cfg)

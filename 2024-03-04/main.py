@@ -26,7 +26,7 @@ def start_client(config: str, name: str, host: str, port: int) -> None:
     cfg: Config = Config(
         log=log,
         path=config,
-        data={"name": name, "server.host": host, "server.port": port},
+        data={"name": name, "server": {"host": host, "port": port}},
     )
 
     client: Client = Client(log=log)
@@ -40,7 +40,6 @@ def start_client(config: str, name: str, host: str, port: int) -> None:
 @click.option(
     "-c",
     "--config",
-    default="server.yaml",
     help="The configuration file must be in YAML format",
 )
 @click.option("-s", "--host", help="Hostname (or IP) of the YACR Server", type=str)
@@ -51,7 +50,7 @@ def start_server(config: str, host: str, port: int) -> None:
     cfg: Config = Config(
         log=log,
         path=config,
-        data={"server.host": host, "server.port": port},
+        data={"server": {"host": host, "port": port}},
     )
 
     server: Server = Server(log=log)
