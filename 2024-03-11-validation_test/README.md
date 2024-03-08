@@ -11,5 +11,6 @@ Some useful considerations to code your program:
    Just you can follow the code of the server.
 2. The server is listening in port *65432*.
 3. The client should allow to ask the command to send to the server from the user.
+4. Only one command is not listed in the help response from the server. Which one is it?
 
 ![That's All Folks!](assets/thats_all_folks.jpg "That's All Folks!")
