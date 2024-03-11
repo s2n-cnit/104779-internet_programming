@@ -17,17 +17,26 @@ class Config:
                 self.__config = yaml.safe_load(open(path, "r"))
         except FileNotFoundError as fnf_err:
             self.__log.exception(f"File {path} not found", error=fnf_err)
-        self.__config.update(data)
+        self.__data = data
         self.__path: str = path
 
     @property
     def host(self: Config) -> str:
-        return self.__config["server"]["host"]
+        try:
+            return self.__config["server"]["host"]
+        except:
+            return self.__data["server"]["host"]
 
     @property
     def port(self: Config) -> int:
-        return self.__config["server"]["port"]
+        try:
+            return self.__config["server"]["port"]
+        except:
+            return self.__data["server"]["port"]
 
     @property
     def name(self: Config) -> str:
-        return self.__config["name"]
+        try:
+            return self.__config["name"]
+        except:
+            return self.__data["server"]["port"]
