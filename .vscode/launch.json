@@ -16,17 +16,17 @@
             "name": "Python Debugger: Client (Alice)",
             "type": "debugpy",
             "request": "launch",
-            "program": "2024_03_06/main.py",
+            "program": "2024-03-06/main.py",
             "console": "integratedTerminal",
-            "args": "-c alice.yaml"
+            "args": "-c 2024-03-06/alice.yaml"
         },
         {
             "name": "Python Debugger: Client (Bob)",
             "type": "debugpy",
             "request": "launch",
-            "program": "2024_0306/main.py",
+            "program": "2024-03-06/main.py",
             "console": "integratedTerminal",
-            "args": "-c bob.yaml"
+            "args": "-c 2024-03-06/bob.yaml"
         },
     ]
 }
