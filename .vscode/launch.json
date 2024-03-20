@@ -1,0 +1,32 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File with Arguments",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": "${command:pickArgs}"
+        },
+        {
+            "name": "Python Debugger: Client (Alice)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "2024_03_06/main.py",
+            "console": "integratedTerminal",
+            "args": "-c alice.yaml"
+        },
+        {
+            "name": "Python Debugger: Client (Bob)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "2024_0306/main.py",
+            "console": "integratedTerminal",
+            "args": "-c bob.yaml"
+        },
+    ]
+}

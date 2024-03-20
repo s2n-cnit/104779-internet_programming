@@ -39,4 +39,4 @@ class Config:
         try:
             return self.__config["name"]
         except:
-            return self.__data["server"]["port"]
+            return self.__data["name"]
