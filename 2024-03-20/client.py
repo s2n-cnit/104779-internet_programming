@@ -33,9 +33,10 @@ if dir == "":
 # Initialize context
 ctx = SSL.Context(SSL.SSLv23_METHOD)
 ctx.set_verify(SSL.VERIFY_PEER, verify_cb)  # Demand a certificate
-ctx.use_privatekey_file(os.path.join(dir, "client.pkey"))
-ctx.use_certificate_file(os.path.join(dir, "client.cert"))
-ctx.load_verify_locations(os.path.join(dir, "CA.cert"))
+ctx.set_ciphers("ALL:@SECLEVEL=0")
+ctx.use_privatekey_file(os.path.join(dir, "keys/client.pkey"))
+ctx.use_certificate_file(os.path.join(dir, "keys/client.cert"))
+ctx.load_verify_locations(os.path.join(dir, "keys/CA.cert"))
 
 # Set up client
 sock = SSL.Connection(ctx, socket.socket(socket.AF_INET, socket.SOCK_STREAM))
