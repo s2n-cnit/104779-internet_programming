@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from datetime import datetime
 
 app = FastAPI()
@@ -9,9 +9,9 @@ rooms = {}
 @app.post("/join")
 def join(username: str, room: str):
     if room not in rooms:
-        raise HTTPException(status_code=404, detail=f"room {room} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"room {room} not found")
     elif username in rooms[room]['users']:
-        raise HTTPException(status_code=304, detail="user {username} already joined in room {room}")
+        raise HTTPException(status_code=status.HTTP_304_NOT_MODIFIED, detail="user {username} already joined in room {room}")
     else:
         rooms[room]["users"].append(username)
         return {'success': True, 'detail': f"user {username} joined to room {room}"}
@@ -20,18 +20,18 @@ def join(username: str, room: str):
 @app.get('/messages')
 def messages(username: str, room: str):
     if room not in rooms:
-        raise HTTPException(status_code=404, detail=f"room {room} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"room {room} not found")
     if username not in rooms[room]['users']:
-        raise HTTPException(status_code=405, detail=f"user {username} not joined in room {room}")
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=f"user {username} not joined in room {room}")
     return rooms[room]['messages']
 
 
 @app.put('/message')
 def add(username: str, room: str, message: str):
     if room not in rooms:
-        raise HTTPException(status_code=404, detail=f"room {room} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"room {room} not found")
     if username not in rooms[room]['users']:
-        raise HTTPException(status_code=405, detail=f"user {username} not joined in room {room}")
+        raise HTTPException(status_code=status.HTTP_405_METHOD_NOT_ALLOWED, detail=f"user {username} not joined in room {room}")
     rooms[room]['messages'] = {
         'timestamp': datetime.now(),
         'message': message
@@ -42,7 +42,7 @@ def add(username: str, room: str, message: str):
 @app.post('/room')
 def create(username: str, room: str):
     if room in rooms:
-        raise HTTPException(status_code=409, detail=f"room {room} already found")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"room {room} already found")
     rooms[room] = {
         "users": [username],
         'messages': []
