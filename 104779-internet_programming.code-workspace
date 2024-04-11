@@ -7,17 +7,19 @@
 	],
 	"settings": {
 		"cSpell.words": [
+			"aredis",
 			"fastapi",
 			"pglet",
 			"REUSEADDR",
+			"sessionmaker",
+			"sqlalchemy",
 			"terr",
 			"websockets",
 			"yacr"
 		],
-		"[python]": {
-			"editor.defaultFormatter": "ms-python.black-formatter"
-		},
-		"python.formatting.provider": "black",
-		"python.linting.flake8Enabled": true
+		"editor.defaultFormatter": "ms-python.autopep8",
+		"autopep8.args": ["--max-line-length=80"],
+		"black-formatter.args": ["--line-length", "80"],
+		"yapf.args": ["--style", "{based_on_style: google, indent_width: 4, column_limit: 80}"]
 	}
 }

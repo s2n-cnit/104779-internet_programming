@@ -25,7 +25,8 @@ class Result(BaseModel):
 def join(user: User, room: Room) -> Result:
     if room.name not in rooms:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"room {room.name} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"room {room.name} not found",
         )
     elif user.name in rooms[room.name]["users"]:
         raise HTTPException(
@@ -43,7 +44,8 @@ def join(user: User, room: Room) -> Result:
 def messages(user: User, room: Room) -> list[str]:
     if room.name not in rooms:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"room {room.name} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"room {room.name} not found",
         )
     if user.name not in rooms[room.name]["users"]:
         raise HTTPException(
@@ -57,7 +59,8 @@ def messages(user: User, room: Room) -> list[str]:
 def add(user: User, room: Room, message: str) -> Result:
     if room not in rooms:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"room {room.name} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"room {room.name} not found",
         )
     if user.name not in rooms[room.name]["users"]:
         raise HTTPException(
@@ -82,7 +85,9 @@ def create(user: User, room: Room) -> Result:
             detail=f"room {room.name} already found",
         )
     rooms[room.name] = {"users": [user.name], "messages": []}
-    return Result(success=True, detail=f"user {user.name} create room {room.name}")
+    return Result(
+        success=True, detail=f"user {user.name} create room {room.name}"
+    )
 
 
 @app.get("/rooms")
@@ -94,7 +99,8 @@ def room() -> list[str]:
 def delete(user: User, room: Room) -> Result:
     if room.name not in rooms:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"room {room.name} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"room {room.name} not found",
         )
     if user.name not in rooms[room.name]["users"]:
         raise HTTPException(
@@ -102,4 +108,6 @@ def delete(user: User, room: Room) -> Result:
             detail=f"user {user.name} not joined in room {room.name}",
         )
     del rooms[room.name]
-    return Result(success=True, detail=f"user {user.name} deletes room {room.name}")
+    return Result(
+        success=True, detail=f"user {user.name} deletes room {room.name}"
+    )
