@@ -18,8 +18,8 @@
 			"yacr"
 		],
 		"editor.defaultFormatter": "ms-python.autopep8",
-		"autopep8.args": ["--max-line-length=80"],
-		"black-formatter.args": ["--line-length", "80"],
-		"yapf.args": ["--style", "{based_on_style: google, indent_width: 4, column_limit: 80}"]
+		"autopep8.args": ["--max-line-length=79"],
+		"black-formatter.args": ["--line-length", "79"],
+		"yapf.args": ["--style", "{based_on_style: google, indent_width: 4, column_limit: 79}"]
 	}
 }
