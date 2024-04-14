@@ -52,20 +52,31 @@ class Message(SQLModel, table=True):
     room: Room = Relationship(back_populates="messages")
 
 
-class Result(BaseModel):
-    success: bool = True
-    error: bool = False
+class Result[Type: SQLModel](BaseModel):
+    success: bool
     detail: str
+    timestamp: datetime
+    data: Type
+
+    def __init__(
+        self: "Result[Type]",
+        detail: str,
+        data: str,
+        success: bool = True,
+    ):
+        self.success = success
+        self.detail = detail
+        self.timestamp = datetime.now()
+        self.data = data
 
 
-class ResultType[Type]:
+class ResultType[Type: SQLModel]:
     CREATED: str = "created"
     DELETED: str = "deleted"
     UPDATED: str = "updated"
-    data: Type
 
-    def NOT_FOUND(type: str, id: str) -> str:
-        return f"{type} with id={id} not found"
+    def NOT_FOUND(id: str) -> str:
+        return f"{Type} with id={id} not found"
 
 
 sqlite_file_name = "yacr.db"

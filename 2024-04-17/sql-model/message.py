@@ -2,20 +2,20 @@ from typing import List
 
 from app import app
 from fastapi import HTTPException, status
-from model import Message, engine
+from model import Message, Result, ResultType, engine
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 
-@app.post("/message")
-async def create_message(message: Message) -> Message:
+@app.post("/message", tags=["Message"])
+async def create_message(message: Message) -> Result[Message]:
     try:
         with Session(engine) as session:
             try:
                 session.add(message)
                 session.commit()
                 session.refresh(message)
-                return message
+                return Result(detail=ResultType.CREATED, data=message)
             except IntegrityError as ie:
                 raise HTTPException(
                     status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=str(ie)
@@ -26,7 +26,8 @@ async def create_message(message: Message) -> Message:
         )
 
 
-@app.get("/messages/")
+@app.get("/message", tags=["Message"])
+@app.get("/messages", tags=["Message"])
 async def read_messages() -> List[Message]:
     try:
         with Session(engine) as session:
@@ -37,7 +38,7 @@ async def read_messages() -> List[Message]:
         )
 
 
-@app.get("/messages/{id}")
+@app.get("/message/{id}", tags=["Message"])
 async def read_message(id: str) -> Message:
     try:
         with Session(engine) as session:
@@ -57,8 +58,8 @@ async def read_message(id: str) -> Message:
         )
 
 
-@app.delete("/messages/{id}")
-async def delete_message(id: str) -> Message:
+@app.delete("/message/{id}", tags=["Message"])
+async def delete_message(id: str) -> Result[Message]:
     try:
         with Session(engine) as session:
             message = session.exec(
@@ -67,11 +68,12 @@ async def delete_message(id: str) -> Message:
             if message is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Message with id={id} not found",
+                    detail=ResultType[Message].NOT_FOUND(id),
                 )
             else:
                 session.delete(message)
                 session.commit()
+                return Result(detail=ResultType.DELETED, data=message)
     except Exception as e:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)

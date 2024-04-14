@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 
-@app.post("/room")
+@app.post("/room", tags=["Room"])
 async def create_room(room: Room) -> Result[Room]:
     try:
         with Session(engine) as session:
@@ -26,7 +26,8 @@ async def create_room(room: Room) -> Result[Room]:
         )
 
 
-@app.get("/rooms/")
+@app.get("/room", tags=["Room"])
+@app.get("/rooms", tags=["Room"])
 async def read_rooms() -> List[Room]:
     try:
         with Session(engine) as session:
@@ -37,7 +38,7 @@ async def read_rooms() -> List[Room]:
         )
 
 
-@app.get("/rooms/{id}")
+@app.get("/room/{id}", tags=["Room"])
 async def read_room(id: str) -> Room:
     try:
         with Session(engine) as session:
@@ -47,7 +48,7 @@ async def read_room(id: str) -> Room:
             if room is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Room with id={id} not found",
+                    detail=ResultType[Room].NOT_FOUND(id),
                 )
             else:
                 return room
@@ -57,8 +58,8 @@ async def read_room(id: str) -> Room:
         )
 
 
-@app.delete("/rooms/{id}")
-async def delete_room(id: str) -> Room:
+@app.delete("/room/{id}", tags=["Room"])
+async def delete_room(id: str) -> Result[Room]:
     try:
         with Session(engine) as session:
             room = session.exec(
@@ -67,11 +68,12 @@ async def delete_room(id: str) -> Room:
             if room is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Room with id={id} not found",
+                    detail=ResultType[Room].NOT_FOUND(id),
                 )
             else:
                 session.delete(room)
                 session.commit()
+                return Result(detail=ResultType.DELETED, data=room)
     except Exception as e:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)

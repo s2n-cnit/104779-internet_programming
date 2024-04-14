@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 
-@app.post("/user")
+@app.post("/user", tags=["User"])
 async def create_user(user: User) -> Result[User]:
     try:
         with Session(engine) as session:
@@ -26,7 +26,8 @@ async def create_user(user: User) -> Result[User]:
         )
 
 
-@app.get("/users/")
+@app.get("/user", tags=["User"])
+@app.get("/users", tags=["User"])
 async def read_users() -> List[User]:
     try:
         with Session(engine) as session:
@@ -37,7 +38,7 @@ async def read_users() -> List[User]:
         )
 
 
-@app.get("/users/{id}")
+@app.get("/user/{id}", tags=["User"])
 async def read_user(id: str) -> User:
     try:
         with Session(engine) as session:
@@ -47,7 +48,7 @@ async def read_user(id: str) -> User:
             if user is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"User with id={id} not found",
+                    detail=ResultType[User].NOT_FOUND(id),
                 )
             else:
                 return user
@@ -57,7 +58,7 @@ async def read_user(id: str) -> User:
         )
 
 
-@app.delete("/users/{id}")
+@app.delete("/user/{id}", tags=["User"])
 async def delete_user(id: str) -> Result[User]:
     try:
         with Session(engine) as session:
@@ -67,7 +68,7 @@ async def delete_user(id: str) -> Result[User]:
             if user is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=ResultType.NOT_FOUND(type="User", id=id),
+                    detail=ResultType[User].NOT_FOUND(id),
                 )
             else:
                 session.delete(user)
