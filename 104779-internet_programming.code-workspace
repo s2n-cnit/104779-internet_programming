@@ -15,6 +15,7 @@
 			"sessionmaker",
 			"sqlalchemy",
 			"terr",
+			"uvicorn",
 			"websockets",
 			"yacr"
 		],
