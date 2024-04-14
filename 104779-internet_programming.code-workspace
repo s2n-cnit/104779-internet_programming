@@ -10,6 +10,7 @@
 			"aredis",
 			"fastapi",
 			"pglet",
+			"pyenv",
 			"REUSEADDR",
 			"sessionmaker",
 			"sqlalchemy",
