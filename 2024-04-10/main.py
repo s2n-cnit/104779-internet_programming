@@ -11,7 +11,8 @@ rooms = {}
 def join(username: str, room: str):
     if room not in rooms:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"room {room} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"room {room} not found",
         )
     elif username in rooms[room]["users"]:
         raise HTTPException(
@@ -20,14 +21,18 @@ def join(username: str, room: str):
         )
     else:
         rooms[room]["users"].append(username)
-        return {"success": True, "detail": f"user {username} joined to room {room}"}
+        return {
+            "success": True,
+            "detail": f"user {username} joined to room {room}",
+        }
 
 
 @app.get("/messages")
 def messages(username: str, room: str):
     if room not in rooms:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"room {room} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"room {room} not found",
         )
     if username not in rooms[room]["users"]:
         raise HTTPException(
@@ -41,7 +46,8 @@ def messages(username: str, room: str):
 def add(username: str, room: str, message: str):
     if room not in rooms:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"room {room} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"room {room} not found",
         )
     if username not in rooms[room]["users"]:
         raise HTTPException(
@@ -49,7 +55,9 @@ def add(username: str, room: str, message: str):
             detail=f"user {username} not joined in room {room}",
         )
 
-    rooms[room]["messages"].append({"timestamp": datetime.now(), "message": message})
+    rooms[room]["messages"].append(
+        {"timestamp": datetime.now(), "message": message}
+    )
     return {
         "success": True,
         "detail": f"user {username} sent message {message} to room {room}",
@@ -60,7 +68,8 @@ def add(username: str, room: str, message: str):
 def create(username: str, room: str):
     if room in rooms:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT, detail=f"room {room} already found"
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"room {room} already found",
         )
     rooms[room] = {"users": [username], "messages": []}
     return {"success": True, "detail": f"user {username} create room {room}"}
@@ -75,7 +84,8 @@ def room():
 def delete(username: str, room: str):
     if room not in rooms:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"room {room} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"room {room} not found",
         )
     if username not in rooms[room]["users"]:
         raise HTTPException(

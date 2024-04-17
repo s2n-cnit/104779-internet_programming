@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
@@ -41,7 +42,7 @@ def join(user: User, room: Room) -> Result:
 
 
 @app.get("/messages")
-def messages(user: User, room: Room) -> list[str]:
+def messages(user: User, room: Room) -> list[Any]:
     if room.name not in rooms:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -57,7 +58,7 @@ def messages(user: User, room: Room) -> list[str]:
 
 @app.put("/message")
 def add(user: User, room: Room, message: str) -> Result:
-    if room not in rooms:
+    if room.name not in rooms:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"room {room.name} not found",
@@ -73,7 +74,7 @@ def add(user: User, room: Room, message: str) -> Result:
     )
     return Result(
         success=True,
-        detail="user {user.name} sent message {message} to room {room.name}",
+        detail=f"user {user.name} sent message {message} to room {room.name}",
     )
 
 
