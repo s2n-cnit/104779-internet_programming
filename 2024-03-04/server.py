@@ -11,6 +11,7 @@ from socket_extended import DEFAULT_HOST, DEFAULT_PORT, SocketExtended
 
 
 class Server(SocketExtended):
+
     def __init__(self: SocketExtended, log: Log) -> None:
         super().__init__(log)
 

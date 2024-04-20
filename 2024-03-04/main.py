@@ -18,7 +18,9 @@ def cli():
     help="The configuration file must be in YAML format",
 )
 @click.option("-n", "--name", help="Your name in the chat", type=str)
-@click.option("-s", "--host", help="Hostname (or IP) of the YACR Server", type=str)
+@click.option(
+    "-s", "--host", help="Hostname (or IP) of the YACR Server", type=str
+)
 @click.option("-p", "--port", help="TCP port of the YACR Server", type=int)
 def start_client(config: str, name: str, host: str, port: int) -> None:
     log: Log = Log(filename="log/yacr-client.log")
@@ -42,7 +44,9 @@ def start_client(config: str, name: str, host: str, port: int) -> None:
     "--config",
     help="The configuration file must be in YAML format",
 )
-@click.option("-s", "--host", help="Hostname (or IP) of the YACR Server", type=str)
+@click.option(
+    "-s", "--host", help="Hostname (or IP) of the YACR Server", type=str
+)
 @click.option("-p", "--port", help="TCP port of the YACR Server", type=int)
 def start_server(config: str, host: str, port: int) -> None:
     log: Log = Log(filename="log/yacr-server.log")
