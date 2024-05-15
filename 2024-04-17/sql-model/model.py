@@ -48,7 +48,7 @@ class Message(SQLModel, table=True):
     sent_at: datetime
     content: str
 
-    user: Room = Relationship(back_populates="messages")
+    user: User = Relationship(back_populates="messages")
     room: Room = Relationship(back_populates="messages")
 
 
