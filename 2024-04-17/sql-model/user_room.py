@@ -26,8 +26,8 @@ async def join_user(room_id: str, user_id: str) -> Result[UserRoom]:
     try:
         with Session(engine) as session:
             try:
-                check_entity(session, User, id)
-                check_entity(session, Room, id)
+                check_entity(session, User, user_id)
+                check_entity(session, Room, room_id)
                 ur = UserRoom(
                     user_id=user_id, room_id=room_id, join_at=datetime.now()
                 )
