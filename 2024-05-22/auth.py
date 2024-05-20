@@ -1,18 +1,20 @@
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-from app import app
-from fastapi import Depends, HTTPException, Security, status
+import jwt
+from fastapi import APIRouter, Depends, HTTPException, Security, status
 from fastapi.security import (
     OAuth2PasswordBearer,
     OAuth2PasswordRequestForm,
     SecurityScopes,
 )
-from jose import JWTError, jwt
-from model import Result, ResultType, User, engine
+from model import Result, User, engine
 from passlib.context import CryptContext
 from pydantic import BaseModel, ValidationError
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
+
+router = APIRouter(tags=["Auth"])
 
 
 class Token(BaseModel):
@@ -35,12 +37,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="token",
-    scopes={
-        "create": "Create records",
-        "read": "Read records",
-        "update": "Update records",
-        "delete": "Delete records",
-    },
+    scopes={"admin": "Administrator", "user": "Normal user"},
 )
 
 
@@ -55,7 +52,7 @@ def get_password_hash(password: str) -> str:
 def get_user(username: str) -> User | None:
     with Session(engine) as session:
         return session.exec(
-            select(User).where(User.username == username)
+            select(User).where(User.id == username)
         ).one_or_none()
 
 
@@ -97,7 +94,7 @@ async def get_current_user(
             raise credentials_exception
         token_scopes = payload.get("scopes", [])
         token_data = TokenData(scopes=token_scopes, username=username)
-    except (JWTError, ValidationError):
+    except ValidationError:
         raise credentials_exception
     user = get_user(username=token_data.username)
     if user is None:
@@ -120,7 +117,7 @@ async def get_current_active_user(
     return current_user
 
 
-@app.post("/token")
+@router.post("/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
@@ -131,30 +128,26 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username, "scopes": form_data.scopes},
+        data={"sub": user.id, "scopes": form_data.scopes},
         expires_delta=access_token_expires,
     )
     return Token(access_token=access_token, token_type="bearer")
 
 
-@app.get("/users/me/", response_model=User)
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)],
-):
-    return current_user
-
-
-@app.get("/users/me/items/")
-async def read_own_items(
-    current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["items"])
-    ],
-):
-    return [{"item_id": "Foo", "owner": current_user.username}]
-
-
-@app.get("/status/")
-async def read_system_status(
-    current_user: Annotated[User, Depends(get_current_user)]
-):
-    return {"status": "ok"}
+@router.post("/sign-up")
+async def sign_up(user: User) -> Result[User]:
+    try:
+        with Session(engine) as session:
+            try:
+                session.add(user)
+                session.commit()
+                session.refresh(user)
+                return Result(detail=f"User {user.id} created", data=user)
+            except IntegrityError as ie:
+                raise HTTPException(
+                    status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=str(ie)
+                )
+    except Exception as e:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )

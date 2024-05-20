@@ -72,15 +72,6 @@ class Result[Type: SQLModel](BaseModel):
         self.data = data
 
 
-class ResultType[Type: SQLModel]:
-    CREATED: str = "created"
-    DELETED: str = "deleted"
-    UPDATED: str = "updated"
-
-    def NOT_FOUND(id: str) -> str:
-        return f"{Type} with id={id} not found"
-
-
 sqlite_file_name = "yacr.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 

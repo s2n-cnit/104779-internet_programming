@@ -1,21 +1,27 @@
-from typing import List
+from typing import Annotated, List
 
-from app import app
-from fastapi import HTTPException, status
-from model import Message, Result, ResultType, engine
+from auth import get_current_active_user
+from fastapi import HTTPException, Security, status
+from model import Message, Result, User, engine
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
+from . import router
 
-@app.post("/message", tags=["Message"])
-async def create_message(message: Message) -> Result[Message]:
+
+@router.post("/message", tags=["Message"], summary="Create a new message")
+async def admin_create_message(message: Message) -> Result[Message]:
     try:
         with Session(engine) as session:
             try:
                 session.add(message)
                 session.commit()
                 session.refresh(message)
-                return Result(detail=ResultType.CREATED, data=message)
+                return Result(
+                    detail=f"Message {message.id} of "
+                    "user {user_id} created in room {room_id}",
+                    data=message,
+                )
             except IntegrityError as ie:
                 raise HTTPException(
                     status_code=status.HTTP_406_NOT_ACCEPTABLE, detail=str(ie)
@@ -26,9 +32,12 @@ async def create_message(message: Message) -> Result[Message]:
         )
 
 
-@app.get("/message", tags=["Message"])
-@app.get("/messages", tags=["Message"])
-async def read_messages() -> List[Message]:
+@router.get("/message", tags=["Message"], summary="Read all messages")
+async def admin_read_messages__admin(
+    current_user: Annotated[
+        User, Security(get_current_active_user, scopes=["admin"])
+    ]
+) -> List[Message]:
     try:
         with Session(engine) as session:
             return session.exec(select(Message)).all()
@@ -38,8 +47,13 @@ async def read_messages() -> List[Message]:
         )
 
 
-@app.get("/message/{id}", tags=["Message"])
-async def read_message(id: str) -> Message:
+@router.delete("/message/{id}", tags=["Message"], summary="Read a message")
+async def admin_delete_message(
+    current_user: Annotated[
+        User, Security(get_current_active_user, scopes=["user"])
+    ],
+    id: str,
+) -> Result[Message]:
     try:
         with Session(engine) as session:
             message = session.exec(
@@ -48,32 +62,16 @@ async def read_message(id: str) -> Message:
             if message is None:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Message with id={id} not found",
-                )
-            else:
-                return message
-    except Exception as e:
-        raise HTTPException(
-            status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
-
-
-@app.delete("/message/{id}", tags=["Message"])
-async def delete_message(id: str) -> Result[Message]:
-    try:
-        with Session(engine) as session:
-            message = session.exec(
-                select(Message).where(Message.id == id)
-            ).one_or_none()
-            if message is None:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=ResultType[Message].NOT_FOUND(id),
+                    detail=f"Message {message.id} not found",
                 )
             else:
                 session.delete(message)
                 session.commit()
-                return Result(detail=ResultType.DELETED, data=message)
+                return Result(
+                    detail=f"Message {message.id} of user {message.user_id} "
+                    "deleted from room {message.room_id}",
+                    data=message,
+                )
     except Exception as e:
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
