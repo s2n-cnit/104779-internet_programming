@@ -103,13 +103,15 @@ async def validate_refresh_token(
 
 
 class RoleChecker:
-    def __init__(self, allowed_role_ids: List[str]):
+    def __init__(
+        self: "RoleChecker", allowed_role_ids: List[str]
+    ) -> "RoleChecker":
         self.allowed_role_ids = allowed_role_ids
 
     def __call__(
-        self, user: Annotated[User, Depends(get_current_active_user)]
-    ):
-        print(user)
+        self: "RoleChecker",
+        user: Annotated[User, Depends(get_current_active_user)],
+    ) -> User:
         if user.role_id in self.allowed_role_ids:
             return user
         raise HTTPException(

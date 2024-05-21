@@ -27,7 +27,7 @@ class User(SQLModel, table=True):
     hashed_password: str
     role_id: str = Field(foreign_key="role.id")
     disabled: bool = False
-    creation_at: datetime
+    creation_at: datetime = datetime.now()
     bio: str | None = None
     age: int | None = None
 
@@ -41,7 +41,7 @@ class User(SQLModel, table=True):
 class Room(SQLModel, table=True):
     id: str = Field(primary_key=True)
     max_user: int | None = None
-    creation_at: datetime
+    creation_at: datetime = datetime.now()
 
     users: List[User] = Relationship(
         back_populates="rooms", link_model=UserRoom
@@ -73,11 +73,10 @@ class Result[Type: SQLModel](BaseModel):
         detail: str,
         data: str,
         success: bool = True,
-    ):
-        self.success = success
-        self.detail = detail
-        self.timestamp = datetime.now()
-        self.data = data
+    ) -> "Result[Type]":
+        super().__init__(
+            success=success, detail=detail, timestamp=datetime.now(), data=data
+        )
 
 
 class Token[Type: SQLModel](BaseModel):
