@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from model import User, engine
+from model import Role, User, engine
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
-data_roles = [{"id": "admin"}, {"id": "user"}]
+data_roles = dict(admin={"id": "admin"}, user={"id": "user"})
 
 data_users = dict(
     admin={
@@ -19,7 +19,7 @@ data_users = dict(
         "bio": "YACR Admin",
         "age": 50,
     },
-    alex_carrega={
+    alexcarrega={
         "id": "alexcarrega",
         "first_name": "Alex",
         "last_name": "Carrega",
@@ -36,14 +36,14 @@ data_users = dict(
 
 def insert_role(key):
     try:
-        user = User(**data_users["admin"])
-        print(user)
+        role = Role(**data_roles[key])
+        print(role)
         with Session(engine) as session:
             try:
-                session.add(user)
+                session.add(role)
                 session.commit()
-                session.refresh(user)
-                print(f"User {user.id} created")
+                session.refresh(role)
+                print(f"Role {role.id} created")
             except IntegrityError as ie:
                 print(f"Error: {ie}")
     except Exception as e:
@@ -52,7 +52,7 @@ def insert_role(key):
 
 def insert_user(key):
     try:
-        user = User(**data_users["admin"])
+        user = User(**data_users[key])
         print(user)
         with Session(engine) as session:
             try:

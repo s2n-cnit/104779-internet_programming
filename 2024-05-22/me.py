@@ -13,7 +13,7 @@ router = APIRouter(prefix="/me", tags=["Me"])
 @router.get("/", tags=["User"], summary="Get my details")
 async def me_get(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["user"]))
+        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
 ) -> User:
     return current_user
@@ -22,7 +22,7 @@ async def me_get(
 @router.delete("/", tags=["User"], summary="Remove my account")
 async def me_delete(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["user"]))
+        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
 ) -> User:
     try:
@@ -45,7 +45,7 @@ async def me_delete(
 )
 async def me_messages(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["user"]))
+        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
     id: str,
 ) -> List[Message]:
@@ -59,7 +59,7 @@ async def me_messages(
 )
 async def me_rooms(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["user"]))
+        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
     id: str,
 ) -> List[Room]:
@@ -73,7 +73,7 @@ async def me_rooms(
 )
 async def me_room_messages(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["user"]))
+        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
     room_id: str,
 ) -> List[Message]:
@@ -93,7 +93,7 @@ async def me_room_messages(
 )
 async def me_join(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["user"]))
+        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
     room_id: str,
 ) -> Result[UserRoom]:
@@ -133,7 +133,7 @@ async def me_join(
 )
 async def me_leave(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["user"]))
+        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
     room_id: str,
 ) -> Result[UserRoom]:

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, List
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -27,7 +27,7 @@ def get_user(username: str):
     with Session(engine) as session:
         return session.exec(
             select(User).where(User.id == username)
-        ).one_or_none
+        ).one_or_none()
 
 
 def authenticate_user(username: str, password: str):
@@ -103,12 +103,13 @@ async def validate_refresh_token(
 
 
 class RoleChecker:
-    def __init__(self, allowed_role_ids):
+    def __init__(self, allowed_role_ids: List[str]):
         self.allowed_role_ids = allowed_role_ids
 
     def __call__(
         self, user: Annotated[User, Depends(get_current_active_user)]
     ):
+        print(user)
         if user.role_id in self.allowed_role_ids:
             return user
         raise HTTPException(
@@ -131,11 +132,11 @@ async def login_for_access_token(
     refresh_token_expires = timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
 
     access_token = create_token(
-        data={"sub": user.username, "role": user.role_id},
+        data={"sub": user.id, "role": user.role_id},
         expires_delta=access_token_expires,
     )
     refresh_token = create_token(
-        data={"sub": user.username, "role": user.role_id},
+        data={"sub": user.id, "role": user.role_id},
         expires_delta=refresh_token_expires,
     )
     refresh_tokens.append(refresh_token)
@@ -148,11 +149,11 @@ async def refresh_access_token(
 ):
     user, token = token_data
     access_token = create_token(
-        data={"sub": user.username, "role": user.role_id},
+        data={"sub": user.id, "role": user.role_id},
         expires_delta=ACCESS_TOKEN_EXPIRE_MINUTES,
     )
     refresh_token = create_token(
-        data={"sub": user.username, "role": user.role_di},
+        data={"sub": user.id, "role": user.role_di},
         expires_delta=ACCESS_TOKEN_EXPIRE_MINUTES,
     )
 
