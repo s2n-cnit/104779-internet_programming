@@ -1,7 +1,7 @@
 from typing import Annotated, List
 
-from auth import get_current_active_user
-from fastapi import HTTPException, Security, status
+from auth import RoleChecker
+from fastapi import Depends, HTTPException, status
 from model import Result, User, engine
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
@@ -12,7 +12,7 @@ from . import router
 @router.post("/user", tags=["User"], summary="Create a new user")
 async def create_user(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["admin"])
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     user: User,
 ) -> Result[User]:
@@ -36,7 +36,7 @@ async def create_user(
 @router.get("/user", tags=["User"], summary="Get all the users")
 async def read_users(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["admin"])
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ]
 ) -> List[User]:
     try:
@@ -53,7 +53,7 @@ async def read_users(
 )
 async def admin_read_user(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["admin"])
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     user_id: str,
 ) -> User:
@@ -77,7 +77,7 @@ async def admin_read_user(
 @router.delete("/user/{user_id}", tags=["User"], summary="Delete a user")
 async def admin_delete_user(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["admin"])
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     user_id: str,
 ) -> User:

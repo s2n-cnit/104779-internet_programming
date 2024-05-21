@@ -1,7 +1,7 @@
 from typing import Annotated, List
 
-from auth import get_current_active_user
-from fastapi import HTTPException, Security, status
+from auth import RoleChecker
+from fastapi import Depends, HTTPException, status
 from model import Result, Room, User, engine
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
@@ -12,7 +12,7 @@ from . import router
 @router.post("/room", tags=["Room"], summary="Create a new chat room")
 async def admin_create_room(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["admin"])
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     room: Room,
 ) -> Result[Room]:
@@ -36,7 +36,7 @@ async def admin_create_room(
 @router.get("/room", tags=["Room"], summary="Get all the rooms")
 async def admin_read_rooms(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["admin"])
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ]
 ) -> List[Room]:
     try:
@@ -53,7 +53,7 @@ async def admin_read_rooms(
 )
 async def admin_read_room(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["admin"])
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     room_id: str,
 ) -> Room:
@@ -78,7 +78,7 @@ async def admin_read_room(
 @router.delete("/room/{room_id}", tags=["Room"], summary="Delete a room")
 async def admin_delete_room(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["admin"])
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     room_id: str,
 ) -> Result[Room]:

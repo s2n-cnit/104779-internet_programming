@@ -12,18 +12,26 @@ class UserRoom(SQLModel, table=True):
     join_at: datetime
 
 
+class Role(SQLModel, table=True):
+    id: str = Field(primary_key=True)
+    description: str | None = None
+
+    users: List["User"] = Relationship(back_populates="role")
+
+
 class User(SQLModel, table=True):
     id: str = Field(primary_key=True)
     first_name: str
     last_name: str
     email: str = Field(sa_column=Column("email", String, unique=True))
     hashed_password: str
+    role_id: str = Field(foreign_key="role.id")
     disabled: bool = False
     creation_at: datetime
-    is_active: bool = Field(default=False)
     bio: str | None = None
     age: int | None = None
 
+    role: Role = Relationship(back_populates="users")
     rooms: list["Room"] = Relationship(
         back_populates="users", link_model=UserRoom
     )
@@ -50,7 +58,7 @@ class Message(SQLModel, table=True):
     sent_at: datetime
     content: str
 
-    user: Room = Relationship(back_populates="messages")
+    user: User = Relationship(back_populates="messages")
     room: Room = Relationship(back_populates="messages")
 
 
@@ -70,6 +78,11 @@ class Result[Type: SQLModel](BaseModel):
         self.detail = detail
         self.timestamp = datetime.now()
         self.data = data
+
+
+class Token[Type: SQLModel](BaseModel):
+    access_token: str | None = None
+    refresh_token: str | None = None
 
 
 sqlite_file_name = "yacr.db"

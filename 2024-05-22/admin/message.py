@@ -1,7 +1,7 @@
 from typing import Annotated, List
 
-from auth import get_current_active_user
-from fastapi import HTTPException, Security, status
+from auth import RoleChecker
+from fastapi import Depends, HTTPException, status
 from model import Message, Result, User, engine
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
@@ -10,7 +10,12 @@ from . import router
 
 
 @router.post("/message", tags=["Message"], summary="Create a new message")
-async def admin_create_message(message: Message) -> Result[Message]:
+async def admin_create_message(
+    current_user: Annotated[
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+    ],
+    message: Message,
+) -> Result[Message]:
     try:
         with Session(engine) as session:
             try:
@@ -35,7 +40,7 @@ async def admin_create_message(message: Message) -> Result[Message]:
 @router.get("/message", tags=["Message"], summary="Read all messages")
 async def admin_read_messages__admin(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["admin"])
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ]
 ) -> List[Message]:
     try:
@@ -50,7 +55,7 @@ async def admin_read_messages__admin(
 @router.delete("/message/{id}", tags=["Message"], summary="Read a message")
 async def admin_delete_message(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["user"])
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     id: str,
 ) -> Result[Message]:

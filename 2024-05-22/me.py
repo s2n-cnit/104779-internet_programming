@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Annotated, List
 
-from auth import get_current_active_user
-from fastapi import APIRouter, HTTPException, Security, status
+from auth import RoleChecker
+from fastapi import APIRouter, Depends, HTTPException, status
 from model import Message, Result, Room, User, UserRoom, engine
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/me", tags=["Me"])
 @router.get("/", tags=["User"], summary="Get my details")
 async def me_get(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["user"])
+        User, Depends(RoleChecker(allowed_role_ids=["user"]))
     ],
 ) -> User:
     return current_user
@@ -22,7 +22,7 @@ async def me_get(
 @router.delete("/", tags=["User"], summary="Remove my account")
 async def me_delete(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["user"])
+        User, Depends(RoleChecker(allowed_role_ids=["user"]))
     ],
 ) -> User:
     try:
@@ -45,7 +45,7 @@ async def me_delete(
 )
 async def me_messages(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["user"])
+        User, Depends(RoleChecker(allowed_role_ids=["user"]))
     ],
     id: str,
 ) -> List[Message]:
@@ -59,7 +59,7 @@ async def me_messages(
 )
 async def me_rooms(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["user"])
+        User, Depends(RoleChecker(allowed_role_ids=["user"]))
     ],
     id: str,
 ) -> List[Room]:
@@ -73,7 +73,7 @@ async def me_rooms(
 )
 async def me_room_messages(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["user"])
+        User, Depends(RoleChecker(allowed_role_ids=["user"]))
     ],
     room_id: str,
 ) -> List[Message]:
@@ -93,7 +93,7 @@ async def me_room_messages(
 )
 async def me_join(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["user"])
+        User, Depends(RoleChecker(allowed_role_ids=["user"]))
     ],
     room_id: str,
 ) -> Result[UserRoom]:
@@ -133,7 +133,7 @@ async def me_join(
 )
 async def me_leave(
     current_user: Annotated[
-        User, Security(get_current_active_user, scopes=["user"])
+        User, Depends(RoleChecker(allowed_role_ids=["user"]))
     ],
     room_id: str,
 ) -> Result[UserRoom]:
