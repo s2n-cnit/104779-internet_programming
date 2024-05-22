@@ -1,8 +1,11 @@
 from datetime import datetime
 
 from model import Role, User, engine
+from passlib.context import CryptContext
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 data_roles = dict(admin={"id": "admin"}, user={"id": "user"})
 
@@ -12,7 +15,7 @@ data_users = dict(
         "first_name": "Super",
         "last_name": "Admin",
         "email": "admin@yacr.com",
-        "hashed_password": "$2b$12$yLRmKj2Gq3imyo9u674jBeEcvZW0WRbz9/zOyU323RJcGg/TKIyp2",
+        "hashed_password": pwd_context.hash("admin"),
         "disabled": False,
         "creation_at": datetime.now(),
         "role_id": "admin",
@@ -24,7 +27,7 @@ data_users = dict(
         "first_name": "Alex",
         "last_name": "Carrega",
         "email": "contact@alexcarrega.com",
-        "hashed_password": "$2b$12$K38LDR2IovAIZhF2Cq9vAuCNeTFdJYie9EXp36h/62Fy9LBgMWa9C",
+        "hashed_password": pwd_context.hash("test-me"),
         "disabled": False,
         "creation_at": datetime.now(),
         "role_id": "user",
