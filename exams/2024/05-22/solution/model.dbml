@@ -1,0 +1,58 @@
+// Use DBML to define your database structure
+// Docs https//dbml.dbdiagram.io/docs
+
+Table Role {
+  id varchar [primary key]
+  description text
+}
+
+Table User {
+  id varchar [primary key]
+  first_name varchar
+  last_name varchar
+  email varchar [unique]
+  hashed_password varchar
+  role_id varchar
+  disabled boolean
+  creation_at timestamp
+  bio text
+  age integer
+
+}
+
+Ref: User.role_id > Role.id
+
+Table Customer {
+  id varchar [primary key]
+  first_name varchar
+  last_name varchar
+  email varchar [unique]
+  user_id varchar
+  created_at timestamp
+}
+
+Ref: Customer.user_id > User.id
+
+Table Book {
+  id varchar [primary key]
+  title varchar
+  author varchar
+  publisher varchar
+  publication_date timestamp
+  user_id varchar
+  created_at timestamp
+}
+
+Ref: Book.user_id > User.id
+
+Table Loan {
+  id varchar [primary key]
+  customer_id varchar
+  book_id varchar
+  user_id varchar
+  created_at timestamp
+}
+
+Ref: Loan.book_id > Book.id
+Ref: Loan.customer_id > Customer.id
+Ref: Loan.user_id > User.id

@@ -1,0 +1,237 @@
+\NeedsTeXFormat{LaTeX2e}[1994/06/01]
+\ProvidesPackage{format}[2018/12/21 Format]
+
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[langlinenos=true,outputdir=build,cache=false]{minted}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{xspace}
+\usepackage{tcolorbox}\tcbuselibrary{skins}
+\usepackage{todonotes}
+\usepackage{varwidth}
+\usepackage[acronym]{glossaries}
+\usepackage{xstring}
+\usepackage[super]{nth}
+
+\IfBeginWith*{\jobname}{solution-}{
+    \printanswers
+}{
+    % do nothing
+}
+
+\colorlet{bg}{Gray!5}
+\colorlet{text}{black}
+
+\colorlet{xlscell}{ForestGreen}
+
+\colorlet{term}{Plum}
+\colorlet{acronym}{TealBlue}
+\colorlet{brand}{TealBlue}
+\colorlet{hl}{black}
+
+\colorlet{codekey}{RoyalPurple}
+\colorlet{codevar}{Salmon}
+\colorlet{codefunc}{NavyBlue}
+\colorlet{codeobj}{BlueViolet}
+\colorlet{codetype}{Tan}
+\colorlet{codeconst}{RubineRed}
+\colorlet{codeop}{Mulberry}
+
+\colorlet{tcbcol@back}{tcbcolback}
+
+\colorlet{str}{Peach}
+\colorlet{lang}{DarkOrchid}
+\colorlet{unit}{black}
+
+\pagecolor{bg}
+\color{text}
+
+\newcommand\word[3]{
+    \expandafter\def\csname w#1\endcsname{\iflanguage{english}{#2}{\iflanguage{italian}{#3}{}}\xspace}
+}
+
+\word{Caution}          {Caution}           {Attenzione}
+\word{Date}             {Date}              {Data}
+\word{Examples}         {Examples}          {Esempi}
+\word{Exercize}         {Exercize}          {Esercizio}
+\word{Extrapoint}       {Extra point}       {Punto extra}
+\word{Extrapoints}      {Extra points}      {Punti extra}
+\word{Group}            {Group}             {Gruppo}
+\word{Important}        {Important}         {Importante}
+\word{Notes}            {Notes}             {Note}
+\word{of}               {of}                {di}
+\word{Page}             {Page}              {Pagina}
+\word{Point}            {Point}             {Punto}
+\word{Points}           {Points}            {Punti}
+\word{Pointsobtained}   {Points obtained}   {Punti ottenuti}
+\word{TBD}              {To Be Determined}  {Da Stabilire}
+\word{Tips}             {Tips}              {Suggerimenti}
+\word{Total}            {Total}             {Totale}
+
+\word{Course}   {Internet Multimedia Engineering} {Internet Multimedia Engineering}
+\word{Exam}     {Exam}                              {Esame}
+\word{Subject}  {Internet Programming}                {Internet Programming}
+
+\word{January}      {January}   {Gennaio}
+\word{February}     {February}  {Febbraio}
+\word{March}        {March}     {Marzo}
+\word{April}        {April}     {Aprile}
+\word{May}          {May}       {Maggio}
+\word{June}         {June}      {Giugno}
+\word{July}         {July}      {Luglio}
+\word{August}       {August}    {Agosto}
+\word{September}    {September} {Settembre}
+\word{October}      {October}   {Ottobre}
+\word{November}     {November}  {Novembre}
+\word{December}     {December}  {Dicembre}
+
+
+\newcommand{\xlscell}[1]{\textcolor{xlscell}{\texttt{#1}}}
+
+\newcommand{\term}[1]{\textcolor{term}{\emph{#1}}}
+\newcommand{\acronym}[1]{\textcolor{acronym}{\texttt{#1}}}
+\newcommand{\brand}[1]{\textcolor{brand}{\texttt{#1}}}
+\newcommand{\hl}[1]{\textcolor{hl}{\textbf{#1}}}
+
+\newcommand{\codekey}[1]{\textcolor{codekey}{\texttt{#1}}}
+\newcommand{\codevar}[1]{\textcolor{codevar}{\texttt{#1}}}
+\newcommand{\codefunc}[1]{\textcolor{codefunc}{\texttt{#1}}}
+\newcommand{\codeobj}[1]{\textcolor{codeobj}{\texttt{#1}}}
+\newcommand{\codetype}[1]{\textcolor{codetype}{\texttt{#1}}}
+\newcommand{\codeconst}[1]{\textcolor{codeconst}{\texttt{#1}}}
+\newcommand{\codeop}[1]{\textcolor{codeop}{\texttt{#1}}}
+
+\newcommand{\str}[1]{\textcolor{str}{``\texttt{#1}``}}
+
+\newcommand{\lang}[1]{\textcolor{lang}{\texttt{#1}}}
+
+\newcommand{\unit}[1]{\textcolor{unit}{\texttt{#1}}}
+
+\newcommand{\questionspace}{\vspace{10mm}}
+\newcommand{\innerspace}{\vspace{5mm}}
+
+\newtcolorbox{stbox}[2][]{enhanced,
+    before skip=2mm, after skip=2mm,
+    colback=black!5, colframe=black!50,
+    boxrule=0.2mm,
+    attach boxed title to top left={xshift=1cm, yshift*=1mm-\tcboxedtitleheight},%
+    varwidth boxed title*=-3cm,
+    drop small lifted shadow,
+    boxed title style={frame code={
+            \path[fill=tcbcol@back!30!black]
+                ([yshift=-1mm, xshift=-1mm]frame.north west)
+                arc[start angle=0, end angle=180, radius=1mm]
+            ([yshift=-1mm, xshift=1mm]frame.north east)
+                arc[start angle=180, end angle=0, radius=1mm];
+        \path[left color=tcbcol@back!60!black,
+            right color=tcbcol@back!60!black,
+            middle color=tcbcol@back!80!black]
+            ([xshift=-2mm]frame.north west) -- ([xshift=2mm]frame.north east)
+            [rounded corners=1mm]-- ([xshift=1mm,yshift=-1mm]frame.north east)
+                -- (frame.south east) -- (frame.south west)
+            -- ([xshift=-1mm,yshift=-1mm]frame.north west)
+            [sharp corners]-- cycle;
+        },interior engine=empty,
+    },
+    fonttitle=\bfseries,
+    title={#2},#1}
+
+\newenvironment{titleitemize}[2]
+    {\innerspace\begin{stbox}[colbacktitle=#2]{#1}\begin{itemize}}
+    {\end{itemize}\end{stbox}}
+
+\newenvironment{tips}       {\begin{titleitemize}{\wTips}{Peach}}           {\end{titleitemize}}
+\newenvironment{important}  {\begin{titleitemize}{\wImportant}{NavyBlue}}   {\end{titleitemize}}
+\newenvironment{notes}      {\begin{titleitemize}{\wNotes}{Goldenrod}}      {\end{titleitemize}}
+\newenvironment{caution}    {\begin{titleitemize}{\wCaution}{BrickRed}}     {\end{titleitemize}}
+\newenvironment{examples}   {\begin{titleitemize}{\wExamples}{JungleGreen}} {\end{titleitemize}}
+
+\shadedsolutions
+\definecolor{SolutionColor}{rgb}{0.992156863,0.992156863,0.588235294}
+\renewcommand{\solutiontitle}{\noindent\textbf{Solution}\par\noindent}
+\renewcommand{\theFancyVerbLine}{\sffamily\textbf{\arabic{FancyVerbLine}}}
+
+\title{%
+    \textbf{\wCourse}\\[2mm]%
+    \textsc{\wExam}\\[2mm]%
+    \underline{\wSubject}%
+}
+\author{Alex Carrega -- \emph{alessandro.carrega@unige.it}}%
+
+\pointpoints{\wPoint}{\wPoints}
+\bonuspointpoints{\wExtrapoint}{\wExtrapoints}
+\hqword{\wExercize}
+\hpword{\wPoints}
+\hsword{\wPointsobtained}
+\htword{\wTotal}
+
+\newcommand{\userinput}[1]{\underline{#1}\xspace}
+
+\newcommand{\addheader}{%
+    \begin{tcolorbox}[enhanced,%
+        arc=10pt,
+        colback=black!5!white, colframe=white!75!black,
+        drop large lifted shadow,
+        fonttitle=\bfseries]
+        \maketitle
+    \end{tcolorbox}
+    \questionspace
+
+    \header{\wSubject}                                          {\wExam}                            {\thedate}
+    \footer{Alex Carrega\\\emph{alessandro.carrega@unige.it}}    {\wPage \thepage\ \wof \numpages}   {\wCourse}
+}
+
+\newcommand{\addpointtable}{%
+    \vfill%
+    \begin{center}%
+        \gradetable[h][questions]%
+    \end{center}%
+}
+
+\newcommand{\setdate}[1]{%
+    \date{#1}%
+    \newcommand{\thedate}{#1}
+}
+
+\pagestyle{headandfoot}
+
+\runningheadrule
+\runningfootrule
+
+\pointsinmargin
+\marginpointname{ \wPoints}
+\boxedpoints
+
+\newcommand{\group}[1]{
+    \begin{center}
+        {\huge\textbf{\wGroup #1}}
+        \questionspace
+    \end{center}
+}
+
+\newacronym{tbd}{TBD}{\wTBD}
+
+\newtcbox{\tagbox}[3][]{enhanced,
+    nobeforeafter,
+    tcbox raise base,
+    boxrule=0.4pt,
+    top=0mm, bottom=0mm, right=0mm, left=4mm,
+    arc=3pt, boxsep=3pt,
+    before upper={\vphantom{dlg}},
+    colframe=#3!75!black,
+    overlay={\begin{tcbclipinterior}%
+            \fill[#3](frame.south west)%
+            rectangle node[text=white, font=\sffamily\bfseries\tiny, rotate=90]{#2}
+                ([xshift=4mm]frame.north west);%
+        \end{tcbclipinterior}}}
+
+
+\setlength{\marginparwidth}{2cm}
+
+\newcommand{\tbd}[1]{\tagbox{#1}{green!75!blue!50!white}{\acrlong{tbd}}}
+
+\newminted{vb.net}{fontsize=\normalsize,
+                    linenos,
+                    % showspaces,
+                    numbersep = 8pt,
+                    autogobble}
