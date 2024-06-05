@@ -1,18 +1,17 @@
-from typing import Type
+from typing import Iterable
 
-from fastapi import HTTPException, status
-from model import ResultType
-from sqlmodel import Session, SQLModel, select
+from sqlmodel import SQLModel
 
 
-def check_entity(
-    session: Session, Entity: Type[SQLModel], entity_id: str
-) -> None:
-    if (
-        session.exec(select(Entity).where(Entity.id == id)).one_or_none()
-        is None
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ResultType[Entity].NOT_FOUND(id),
-        )
+def require(model: SQLModel, *which: Iterable[str]):
+    if not which:  # require all
+        which = model.schema()["properties"].keys()
+    new_model = type(
+        f"{model.__name__}__{'_'.join(which)}",
+        model.__bases__,
+        dict(model.__dict__),
+    )
+    for field in list(new_model.__fields__.keys()):
+        if field not in which:
+            del new_model.__fields__[field]
+    return new_model

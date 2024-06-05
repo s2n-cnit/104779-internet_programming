@@ -3,7 +3,15 @@ from typing import Annotated, List
 
 from auth import RoleChecker
 from fastapi import Depends, HTTPException, status
-from model import Book, Result, User, engine
+from model import (
+    Book,
+    BookCreate,
+    BookPublic,
+    BookUpdate,
+    Result,
+    User,
+    engine,
+)
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
@@ -15,9 +23,9 @@ async def admin_create_book(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
-    book: Book,
+    book: BookCreate,
     created: bool = True,
-) -> Result[Book]:
+) -> Result[BookPublic]:
     try:
         with Session(engine) as session:
             try:

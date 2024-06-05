@@ -4,6 +4,7 @@ from typing import ClassVar, List, Optional, Tuple
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 from sqlmodel import Field, Relationship, SQLModel, create_engine
+from utils import require
 
 
 class Loan(SQLModel, table=True):
@@ -201,6 +202,11 @@ class Book(SQLModel, table=True):
         "updated_by_id",
         "updated_at",
     )
+
+
+BookCreate = require(Book, *Book.create_fields)
+BookUpdate = require(Book, *Book.update_fields)
+BookPublic = require(Book, *Book.public_fields)
 
 
 class Result[Type: SQLModel](BaseModel):
