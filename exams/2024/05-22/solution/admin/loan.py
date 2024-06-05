@@ -20,6 +20,10 @@ async def admin_create_loan(
     try:
         with Session(engine) as session:
             try:
+                if created:
+                    loan.created_by_id = current_user.id
+                else:
+                    loan.updated_by_id = current_user.id
                 session.add(loan)
                 session.commit()
                 session.refresh(loan)

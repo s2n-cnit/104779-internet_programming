@@ -24,7 +24,7 @@ class User(SQLModel, table=True):
     first_name: str
     last_name: str
     email: str = Field(sa_column=Column("email", String, unique=True))
-    hashed_password: str
+    password: str
     role_id: str = Field(foreign_key="role.id")
     disabled: bool = False
     creation_at: datetime = datetime.now()

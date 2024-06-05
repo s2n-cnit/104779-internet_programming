@@ -20,6 +20,10 @@ async def admin_create_user(
     try:
         with Session(engine) as session:
             try:
+                if created:
+                    user.created_by_id = current_user.id
+                else:
+                    user.updated_by_id = current_user.id
                 session.add(user)
                 session.commit()
                 session.refresh(user)

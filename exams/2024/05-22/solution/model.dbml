@@ -11,48 +11,61 @@ Table User {
   first_name varchar
   last_name varchar
   email varchar [unique]
-  hashed_password varchar
+  password varchar
   role_id varchar
   disabled boolean
-  creation_at timestamp
   bio text
   age integer
-
+  created_by_id varchar
+  created_at timestamp
+  updated_by_id varchar
+  updated_at timestamp
 }
 
 Ref: User.role_id > Role.id
+Ref: User.created_by_id > User.id
+Ref: User.updated_by_id > User.id
 
 Table Customer {
   id varchar [primary key]
   first_name varchar
   last_name varchar
   email varchar [unique]
-  user_id varchar
+  created_by_id varchar
   created_at timestamp
+  updated_by_id varchar
+  updated_at timestamp
 }
 
-Ref: Customer.user_id > User.id
+Ref: Customer.created_by_id > User.id
+Ref: Customer.updated_by_id > User.id
 
 Table Book {
   id varchar [primary key]
   title varchar
   author varchar
   publisher varchar
-  publication_date timestamp
-  user_id varchar
+  date timestamp
+  created_by_id varchar
   created_at timestamp
+  updated_by_id varchar
+  updated_at timestamp
 }
 
-Ref: Book.user_id > User.id
+Ref: Book.created_by_id > User.id
+Ref: Book.updated_by_id > User.id
 
 Table Loan {
   id varchar [primary key]
   customer_id varchar
   book_id varchar
-  user_id varchar
+  created_by_id varchar
   created_at timestamp
+  updated_by_id varchar
+  updated_at timestamp
 }
 
 Ref: Loan.book_id > Book.id
 Ref: Loan.customer_id > Customer.id
-Ref: Loan.user_id > User.id
+Ref: Loan.created_by_id > User.id
+Ref: Loan.updated_by_id > User.id

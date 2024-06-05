@@ -20,6 +20,10 @@ async def admin_create_customer(
     try:
         with Session(engine) as session:
             try:
+                if created:
+                    customer.created_by_id = current_user.id
+                else:
+                    customer.updated_by_id = current_user.id
                 session.add(customer)
                 session.commit()
                 session.refresh(customer)

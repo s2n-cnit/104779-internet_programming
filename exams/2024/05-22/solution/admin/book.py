@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Annotated, List
 
 from auth import RoleChecker
@@ -20,6 +21,10 @@ async def admin_create_book(
     try:
         with Session(engine) as session:
             try:
+                if created:
+                    book.created_by_id = current_user.id
+                else:
+                    book.updated_by_id = current_user.id
                 session.add(book)
                 session.commit()
                 session.refresh(book)

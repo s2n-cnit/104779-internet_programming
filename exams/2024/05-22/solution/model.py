@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import ClassVar, List, Optional, Tuple
 
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
@@ -14,18 +14,54 @@ class Loan(SQLModel, table=True):
     book_id: str = Field(foreign_key="book.id")
 
     created_by_id: str = Field(foreign_key="user.id")
-    created_at: datetime
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+
+    updated_by_id: str = Field(foreign_key="user.id")
+    updated_at: Optional[datetime] = Field(
+        default_factory=datetime.now,
+        sa_column_kwargs={"onupdate": datetime.now},
+    )
 
     book: "Book" = Relationship(back_populates="loans")
-    customer: "Loan" = Relationship(back_populates="loans")
+    # customer: "Loan" = Relationship(back_populates="loans")
     created_by: "User" = Relationship(back_populates="loans")
+
+    create_fields: ClassVar[Tuple] = ("customer_id", "book_id")
+    update_fields: ClassVar[Tuple] = ()
+    public_fields: ClassVar[Tuple] = (
+        "id",
+        "customer_id",
+        "book_id",
+        "created_at",
+        "updated_at",
+    )
 
 
 class Role(SQLModel, table=True):
     id: str = Field(primary_key=True)
     description: str | None = None
 
+    created_by_id: str = Field(foreign_key="user.id")
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+
+    updated_by_id: str = Field(foreign_key="user.id")
+    updated_at: Optional[datetime] = Field(
+        default_factory=datetime.now,
+        sa_column_kwargs={"onupdate": datetime.now},
+    )
+
     users: List["User"] = Relationship(back_populates="role")
+
+    create_fields: ClassVar[Tuple] = ("id", "description")
+    update_fields: ClassVar[Tuple] = ("id", "description")
+    public_fields: ClassVar[Tuple] = (
+        "id",
+        "description",
+        "created_by_id",
+        "created_at",
+        "updated_by_id",
+        "updated_at",
+    )
 
 
 class User(SQLModel, table=True):
@@ -33,17 +69,62 @@ class User(SQLModel, table=True):
     first_name: str
     last_name: str
     email: str = Field(sa_column=Column("email", String, unique=True))
-    hashed_password: str
+    password: str
     role_id: str = Field(foreign_key="role.id")
     disabled: bool = False
-    creation_at: datetime = datetime.now()
     bio: str | None = None
     age: int | None = None
+
+    created_by_id: str = Field(foreign_key="user.id")
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+
+    updated_by_id: str = Field(foreign_key="user.id")
+    updated_at: Optional[datetime] = Field(
+        default_factory=datetime.now,
+        sa_column_kwargs={"onupdate": datetime.now},
+    )
 
     books: list["Book"] = Relationship(back_populates="created_by")
     customers: list["Customer"] = Relationship(back_populates="created_by")
     loans: list["Loan"] = Relationship(back_populates="created_by")
     role: Role = Relationship(back_populates="users")
+
+    create_fields: ClassVar[Tuple] = (
+        "id",
+        "first_name",
+        "last_name",
+        "email",
+        "password",
+        "role_id",
+        "disabled",
+        "bio",
+        "age",
+    )
+    update_fields: ClassVar[Tuple] = (
+        "id",
+        "first_name",
+        "last_name",
+        "email",
+        "password",
+        "role_id",
+        "disabled",
+        "bio",
+        "age",
+    )
+    public_fields: ClassVar[Tuple] = (
+        "id",
+        "first_name",
+        "last_name",
+        "email",
+        "role_id",
+        "disabled",
+        "bio",
+        "age",
+        "created_by_id",
+        "created_at",
+        "updated_by_id",
+        "updated_at",
+    )
 
 
 class Customer(SQLModel, table=True):
@@ -55,13 +136,32 @@ class Customer(SQLModel, table=True):
     email: str = Field(sa_column=Column("email", String, unique=True))
 
     created_by_id: str = Field(foreign_key="user.id")
-    created_at: datetime = datetime.now()
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
 
-    books: list["Book"] = Relationship(
-        back_populates="customers", link_model=Loan
+    updated_by_id: str = Field(foreign_key="user.id")
+    updated_at: Optional[datetime] = Field(
+        default_factory=datetime.now,
+        sa_column_kwargs={"onupdate": datetime.now},
     )
-    loans: list["Loan"] = Relationship(back_populates="customer")
+
+    # books: list["Book"] = Relationship(
+    #     back_populates="customers", link_model=Loan
+    # )
+    # loans: list[Loan] = Relationship(back_populates="customer")
     created_by: User = Relationship(back_populates="customers")
+
+    create_fields: ClassVar[Tuple] = ("first_name", "last_name", "email")
+    update_fields: ClassVar[Tuple] = ("first_name", "last_name", "email")
+    public_fields: ClassVar[Tuple] = (
+        "id",
+        "first_name",
+        "last_name",
+        "email",
+        "created_by_id",
+        "created_at",
+        "updated_by_id",
+        "updated_at",
+    )
 
 
 class Book(SQLModel, table=True):
@@ -71,16 +171,36 @@ class Book(SQLModel, table=True):
     title: str
     author: str
     publisher: str
-    publication_date: datetime
+    date: datetime
 
     created_by_id: str = Field(foreign_key="user.id")
-    created_at: datetime = datetime.now()
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
 
-    customers: List[Customer] = Relationship(
-        back_populates="books", link_model=Loan
+    updated_by_id: str = Field(foreign_key="user.id")
+    updated_at: Optional[datetime] = Field(
+        default_factory=datetime.now,
+        sa_column_kwargs={"onupdate": datetime.now},
     )
+
+    # customers: List[Customer] = Relationship(
+    #     back_populates="books", link_model=Loan
+    # )
     loans: List[Loan] = Relationship(back_populates="book")
     created_by: User = Relationship(back_populates="books")
+
+    create_fields: ClassVar[Tuple] = ("title", "author", "publisher", "date")
+    update_fields: ClassVar[Tuple] = ("title", "author", "publisher", "date")
+    public_fields: ClassVar[Tuple] = (
+        "id",
+        "title",
+        "author",
+        "publisher",
+        "date",
+        "created_by_id",
+        "created_at",
+        "updated_by_id",
+        "updated_at",
+    )
 
 
 class Result[Type: SQLModel](BaseModel):
