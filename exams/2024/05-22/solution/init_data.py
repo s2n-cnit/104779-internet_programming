@@ -42,7 +42,6 @@ data_users = dict(
 def insert_role(key):
     try:
         role = Role(**data_roles[key])
-        print(role)
         with Session(engine) as session:
             try:
                 session.add(role)

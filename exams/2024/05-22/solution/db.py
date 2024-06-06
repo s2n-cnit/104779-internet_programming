@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import HTTPException, status
-from model import Result, User, engine
+from model import Book, Result, User, engine
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, SQLModel, select
 
@@ -11,11 +11,12 @@ class DB[Type: SQLModel, text: str]:
         try:
             with Session(engine) as session:
                 try:
-                    model.created_by_id = user.id
-                    session.add(model)
+                    obj = Book(**model.model_dump(exclude_unset=True))
+                    obj.created_by_id = user.id
+                    session.add(obj)
                     session.commit()
-                    session.refresh(model)
-                    return Result(f"{text} {model.id} created")
+                    session.refresh(obj)
+                    return Result(f"{text} {obj.id} created")
                 except IntegrityError as ie:
                     raise HTTPException(
                         status.HTTP_406_NOT_ACCEPTABLE, str(ie)
@@ -26,7 +27,7 @@ class DB[Type: SQLModel, text: str]:
     def read_all() -> List[Type]:
         try:
             with Session(engine) as session:
-                return session.exec(select(Type)).all()
+                return session.exec(select(Type)).unique().all()
         except Exception as e:
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
 

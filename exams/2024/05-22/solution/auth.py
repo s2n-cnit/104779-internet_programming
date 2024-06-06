@@ -25,9 +25,7 @@ REFRESH_TOKEN_EXPIRE_MINUTES = 120
 
 def get_user(username: str):
     with Session(engine) as session:
-        return session.exec(
-            select(User).where(User.id == username)
-        ).one_or_none()
+        return session.get(User, username)
 
 
 def authenticate_user(username: str, password: str):
