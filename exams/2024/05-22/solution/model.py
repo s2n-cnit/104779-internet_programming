@@ -1,72 +1,126 @@
 from datetime import datetime
-from typing import ClassVar, List, Optional, Tuple
+from typing import List, Optional
 
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 from sqlmodel import Field, Relationship, SQLModel, create_engine
-from utils import require
+
+# Base
 
 
-class Loan(SQLModel, table=True):
+class BaseId(SQLModel):
+    id: int = Field(primary_key=True)
+
+
+class BaseIdAuto(SQLModel):
     id: int = Field(
         sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
     )
+
+
+class BasePublic(SQLModel):
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = Field(
+        default_factory=datetime.now,
+        sa_column_kwargs={"onupdate": datetime.now},
+    )
+
+
+class Base(SQLModel):
+    created_by_id: str = Field(foreign_key="user.id")
+    updated_by_id: str | None = Field(foreign_key="user.id")
+
+
+# Loan
+
+
+class LoanCreate(SQLModel):
     customer_id: str = Field(foreign_key="customer.id")
     book_id: str = Field(foreign_key="book.id")
 
-    created_by_id: str = Field(foreign_key="user.id")
-    created_at: Optional[datetime] = Field(default_factory=datetime.now)
 
-    updated_by_id: str = Field(foreign_key="user.id")
-    updated_at: Optional[datetime] = Field(
-        default_factory=datetime.now,
-        sa_column_kwargs={"onupdate": datetime.now},
+class LoanUpdate(SQLModel):
+    pass
+
+
+class LoanPublic(LoanCreate, BasePublic, BaseIdAuto):
+    pass
+
+
+class Loan(LoanPublic, Base, table=True):
+    book: "Book" = Relationship(
+        back_populates="loans",
+        sa_relationship_kwargs={
+            "primaryjoin": "Book.id==Loan.book_id",
+            "lazy": "joined",
+        },
+    )
+    customer: "Customer" = Relationship(
+        back_populates="loans",
+        sa_relationship_kwargs={
+            "primaryjoin": "Loan.customer_id==Customer.id",
+            "lazy": "joined",
+        },
+    )
+    created_by: "User" = Relationship(
+        back_populates="loans_created",
+        sa_relationship_kwargs={
+            "primaryjoin": "Loan.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    updated_by: "User" = Relationship(
+        back_populates="loans_updated",
+        sa_relationship_kwargs={
+            "primaryjoin": "Loan.updated_by_id==User.id",
+            "lazy": "joined",
+        },
     )
 
-    book: "Book" = Relationship(back_populates="loans")
-    # customer: "Loan" = Relationship(back_populates="loans")
-    created_by: "User" = Relationship(back_populates="loans")
 
-    create_fields: ClassVar[Tuple] = ("customer_id", "book_id")
-    update_fields: ClassVar[Tuple] = ()
-    public_fields: ClassVar[Tuple] = (
-        "id",
-        "customer_id",
-        "book_id",
-        "created_at",
-        "updated_at",
-    )
+# Role
 
 
-class Role(SQLModel, table=True):
-    id: str = Field(primary_key=True)
+class RoleCreate(BaseId):
     description: str | None = None
 
-    created_by_id: str = Field(foreign_key="user.id")
-    created_at: Optional[datetime] = Field(default_factory=datetime.now)
 
-    updated_by_id: str = Field(foreign_key="user.id")
-    updated_at: Optional[datetime] = Field(
-        default_factory=datetime.now,
-        sa_column_kwargs={"onupdate": datetime.now},
+class RoleUpdate(RoleCreate):
+    pass
+
+
+class RolePublic(RoleCreate, BasePublic):
+    pass
+
+
+class Role(RolePublic, Base, table=True):
+    users: List["User"] = Relationship(
+        back_populates="role",
+        sa_relationship_kwargs={
+            "primaryjoin": "Role.id==User.role_id",
+            "lazy": "joined",
+        },
+    )
+    created_by: "User" = Relationship(
+        back_populates="roles_created",
+        sa_relationship_kwargs={
+            "primaryjoin": "Role.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    updated_by: "User" = Relationship(
+        back_populates="roles_updated",
+        sa_relationship_kwargs={
+            "primaryjoin": "Role.updated_by_id==User.id",
+            "lazy": "joined",
+        },
     )
 
-    users: List["User"] = Relationship(back_populates="role")
 
-    create_fields: ClassVar[Tuple] = ("id", "description")
-    update_fields: ClassVar[Tuple] = ("id", "description")
-    public_fields: ClassVar[Tuple] = (
-        "id",
-        "description",
-        "created_by_id",
-        "created_at",
-        "updated_by_id",
-        "updated_at",
-    )
+# User
 
 
-class User(SQLModel, table=True):
-    id: str = Field(primary_key=True)
+class UserCreate(BaseId):
     first_name: str
     last_name: str
     email: str = Field(sa_column=Column("email", String, unique=True))
@@ -76,154 +130,198 @@ class User(SQLModel, table=True):
     bio: str | None = None
     age: int | None = None
 
-    created_by_id: str = Field(foreign_key="user.id")
-    created_at: Optional[datetime] = Field(default_factory=datetime.now)
 
-    updated_by_id: str = Field(foreign_key="user.id")
-    updated_at: Optional[datetime] = Field(
-        default_factory=datetime.now,
-        sa_column_kwargs={"onupdate": datetime.now},
-    )
-
-    books: list["Book"] = Relationship(back_populates="created_by")
-    customers: list["Customer"] = Relationship(back_populates="created_by")
-    loans: list["Loan"] = Relationship(back_populates="created_by")
-    role: Role = Relationship(back_populates="users")
-
-    create_fields: ClassVar[Tuple] = (
-        "id",
-        "first_name",
-        "last_name",
-        "email",
-        "password",
-        "role_id",
-        "disabled",
-        "bio",
-        "age",
-    )
-    update_fields: ClassVar[Tuple] = (
-        "id",
-        "first_name",
-        "last_name",
-        "email",
-        "password",
-        "role_id",
-        "disabled",
-        "bio",
-        "age",
-    )
-    public_fields: ClassVar[Tuple] = (
-        "id",
-        "first_name",
-        "last_name",
-        "email",
-        "role_id",
-        "disabled",
-        "bio",
-        "age",
-        "created_by_id",
-        "created_at",
-        "updated_by_id",
-        "updated_at",
-    )
+class UserUpdate(UserCreate):
+    pass
 
 
-class Customer(SQLModel, table=True):
-    id: str = Field(
-        sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
+class UserPublic(BasePublic, BaseId):
+    first_name: str
+    last_name: str
+    email: str = Field(sa_column=Column("email", String, unique=True))
+    role_id: str = Field(foreign_key="role.id")
+    disabled: bool = False
+    bio: str | None = None
+    age: int | None = None
+
+
+class User(UserCreate, Base, BasePublic, table=True):
+    books: list["Book"] = Relationship(
+        back_populates="created_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Book.created_by_id==User.id",
+            "lazy": "joined",
+        },
     )
+    books_updated: list["Book"] = Relationship(
+        back_populates="updated_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Book.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    customers_created: list["Customer"] = Relationship(
+        back_populates="created_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Customer.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    customers_updated: list["Customer"] = Relationship(
+        back_populates="updated_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Customer.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    loans_created: list["Loan"] = Relationship(
+        back_populates="created_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Loan.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    loans_updated: list["Loan"] = Relationship(
+        back_populates="updated_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Loan.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    role: Role = Relationship(
+        back_populates="users",
+        sa_relationship_kwargs={
+            "primaryjoin": "User.role_id==Role.id",
+            "lazy": "joined",
+        },
+    )
+    roles_created: list["Role"] = Relationship(
+        back_populates="created_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Role.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    roles_updated: list["Role"] = Relationship(
+        back_populates="updated_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Role.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+
+
+# Customer
+
+
+class CustomerCreate(SQLModel):
     first_name: str
     last_name: str
     email: str = Field(sa_column=Column("email", String, unique=True))
 
-    created_by_id: str = Field(foreign_key="user.id")
-    created_at: Optional[datetime] = Field(default_factory=datetime.now)
 
-    updated_by_id: str = Field(foreign_key="user.id")
-    updated_at: Optional[datetime] = Field(
-        default_factory=datetime.now,
-        sa_column_kwargs={"onupdate": datetime.now},
+class CustomerUpdate(CustomerCreate):
+    pass
+
+
+class CustomerPublic(CustomerCreate, BasePublic, BaseIdAuto):
+    pass
+
+
+class Customer(CustomerPublic, Base, table=True):
+    books: list["Book"] = Relationship(
+        back_populates="customers",
+        link_model=Loan,
+    )
+    loans: list[Loan] = Relationship(
+        back_populates="customer",
+        # sa_relationship_kwargs={
+        #     "primaryjoin": "Loan.customer_id==Customer.id",
+        #     "lazy": "joined",
+        # },
+    )
+    created_by: User = Relationship(
+        back_populates="customers_created",
+        sa_relationship_kwargs={
+            "primaryjoin": "Customer.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    updated_by: User = Relationship(
+        back_populates="customers_updated",
+        sa_relationship_kwargs={
+            "primaryjoin": "Customer.updated_by_id==User.id",
+            "lazy": "joined",
+        },
     )
 
-    # books: list["Book"] = Relationship(
-    #     back_populates="customers", link_model=Loan
-    # )
-    # loans: list[Loan] = Relationship(back_populates="customer")
-    created_by: User = Relationship(back_populates="customers")
 
-    create_fields: ClassVar[Tuple] = ("first_name", "last_name", "email")
-    update_fields: ClassVar[Tuple] = ("first_name", "last_name", "email")
-    public_fields: ClassVar[Tuple] = (
-        "id",
-        "first_name",
-        "last_name",
-        "email",
-        "created_by_id",
-        "created_at",
-        "updated_by_id",
-        "updated_at",
-    )
+# Book
 
 
-class Book(SQLModel, table=True):
-    id: str = Field(
-        sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
-    )
+class BookCreate(SQLModel):
     title: str
     author: str
     publisher: str
     date: datetime
 
-    created_by_id: str = Field(foreign_key="user.id")
-    created_at: Optional[datetime] = Field(default_factory=datetime.now)
 
-    updated_by_id: str = Field(foreign_key="user.id")
-    updated_at: Optional[datetime] = Field(
-        default_factory=datetime.now,
-        sa_column_kwargs={"onupdate": datetime.now},
+class BookUpdate(BookCreate):
+    pass
+
+
+class BookPublic(BookCreate, BasePublic, BaseIdAuto):
+    pass
+
+
+class Book(BookPublic, Base, table=True):
+    customers: List[Customer] = Relationship(
+        back_populates="books",
+        link_model=Loan,
+    )
+    loans: List[Loan] = Relationship(
+        back_populates="book",
+        sa_relationship_kwargs={
+            "primaryjoin": "Book.id==Loan.book_id",
+            "lazy": "joined",
+        },
+    )
+    created_by: User = Relationship(
+        back_populates="books",
+        sa_relationship_kwargs={
+            "primaryjoin": "Book.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    updated_by: User = Relationship(
+        back_populates="books",
+        sa_relationship_kwargs={
+            "primaryjoin": "Book.updated_by_id==User.id",
+            "lazy": "joined",
+        },
     )
 
-    # customers: List[Customer] = Relationship(
-    #     back_populates="books", link_model=Loan
-    # )
-    loans: List[Loan] = Relationship(back_populates="book")
-    created_by: User = Relationship(back_populates="books")
 
-    create_fields: ClassVar[Tuple] = ("title", "author", "publisher", "date")
-    update_fields: ClassVar[Tuple] = ("title", "author", "publisher", "date")
-    public_fields: ClassVar[Tuple] = (
-        "id",
-        "title",
-        "author",
-        "publisher",
-        "date",
-        "created_by_id",
-        "created_at",
-        "updated_by_id",
-        "updated_at",
-    )
+# Result
 
 
-BookCreate = require(Book, *Book.create_fields)
-BookUpdate = require(Book, *Book.update_fields)
-BookPublic = require(Book, *Book.public_fields)
-
-
-class Result[Type: SQLModel](BaseModel):
+class Result(BaseModel):
     success: bool
     detail: str
     timestamp: datetime
-    data: Type
 
     def __init__(
-        self: "Result[Type]",
+        self: "Result",
         detail: str,
         data: str,
         success: bool = True,
-    ) -> "Result[Type]":
+    ) -> "Result":
         super().__init__(
             success=success, detail=detail, timestamp=datetime.now(), data=data
         )
+
+
+# Token
 
 
 class Token[Type: SQLModel](BaseModel):

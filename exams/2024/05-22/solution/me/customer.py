@@ -1,11 +1,13 @@
 from typing import Annotated, List
 
-from admin.customer import admin_create_customer
 from auth import RoleChecker
-from fastapi import Depends, HTTPException, status
-from model import Customer, Result, User
+from db import DB
+from fastapi import Depends
+from model import Customer, CustomerPublic, Result, User
 
 from . import router
+
+db_customer = DB[Customer, "Customer"]
 
 
 @router.get(
@@ -17,8 +19,8 @@ async def me_read_customers(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
-) -> List[Customer]:
-    return me_read_customer(current_user)
+) -> List[CustomerPublic]:
+    return current_user.customers
 
 
 @router.get(
@@ -30,23 +32,9 @@ async def me_read_customer(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
-    customer_id: str = None,
-) -> List[Customer]:
-    if customer_id is None:
-        return current_user.customers
-    else:
-        data = list(
-            filter(
-                lambda customer: customer.id == customer_id,
-                current_user.customers,
-            )
-        )
-        if len(data) == 0:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND,
-                f"Customer {customer_id} not found",
-            )
-        return data[0]
+    customer_id: str,
+) -> List[CustomerPublic]:
+    return db_customer.read_personal(customer_id, current_user.customers)
 
 
 @router.put("/customer", tags=["Customer"], summary="Update a customer")
@@ -55,9 +43,6 @@ async def me_update_customer(
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
     customer: Customer,
-) -> Result[Customer]:
-    try:
-        me_read_customer(current_user, customer.id)
-        admin_create_customer(current_user, customer, created=False)
-    except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+) -> Result:
+    db_customer.read_personal(customer.id, current_user.customers)
+    return db_customer.create(customer, current_user)

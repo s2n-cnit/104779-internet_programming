@@ -1,12 +1,13 @@
 from typing import Annotated, List
 
 from auth import RoleChecker
-from fastapi import Depends, HTTPException, status
-from model import Loan, Result, User, engine
-from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session, select
+from db import DB
+from fastapi import Depends
+from model import Loan, Result, User
 
 from . import router
+
+db_loan = DB[Loan, "Loan"]
 
 
 @router.post("/loan", tags=["Loan"], summary="Insert a new loan")
@@ -15,27 +16,8 @@ async def admin_create_loan(
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
     loan: Loan,
-    created: bool = True,
-) -> Result[Loan]:
-    try:
-        with Session(engine) as session:
-            try:
-                if created:
-                    loan.created_by_id = current_user.id
-                else:
-                    loan.updated_by_id = current_user.id
-                session.add(loan)
-                session.commit()
-                session.refresh(loan)
-                return Result(
-                    f"Loan {loan.id} "
-                    f" {'created' if created else 'updated'}",
-                    data=loan,
-                )
-            except IntegrityError as ie:
-                raise HTTPException(status.HTTP_406_NOT_ACCEPTABLE, str(ie))
-    except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+) -> Result:
+    return db_loan.create(loan, current_user)
 
 
 @router.get("/loan", tags=["Loan"], summary="Read all loans")
@@ -44,7 +26,7 @@ async def admin_read_loans(
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ]
 ) -> List[Loan]:
-    return admin_read_loan(current_user)
+    return db_loan.read_all()
 
 
 @router.get(
@@ -54,23 +36,9 @@ async def admin_read_loan(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
-    loan_id: str = None,
+    loan_id: str,
 ) -> Loan:
-    try:
-        with Session(engine) as session:
-            if loan_id is not None:
-                loan = session.exec(
-                    select(Loan).where(Loan.id == loan_id)
-                ).one_or_none()
-                if loan is None:
-                    raise HTTPException(
-                        status.HTTP_404_NOT_FOUND, f"Loan {loan_id} not found"
-                    )
-                return loan
-            else:
-                return session.exec(select(Loan)).all()
-    except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+    return db_loan.read(loan_id)
 
 
 @router.put("/loan", tags=["Loan"], summary="Update a loan")
@@ -79,12 +47,8 @@ async def admin_update_loan(
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     loan: Loan,
-) -> Result[Loan]:
-    try:
-        admin_read_loan(current_user, loan.id)
-        admin_create_loan(current_user, loan, created=False)
-    except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+) -> Result:
+    return db_loan.update(loan, current_user)
 
 
 @router.delete("/loan/{id}", tags=["Loan"], summary="Delete a loan")
@@ -93,12 +57,5 @@ async def admin_delete_loan(
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     loan_id: str,
-) -> Result[Loan]:
-    try:
-        with Session(engine) as session:
-            loan = admin_read_loan(current_user, loan_id)
-            session.delete(loan)
-            session.commit()
-            return Result(f"Loan {loan.id} deleted", data=loan)
-    except Exception as e:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+) -> Result:
+    return db_loan.delete(loan_id)
