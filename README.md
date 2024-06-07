@@ -5,7 +5,7 @@
 ### 2024
 
  1. [11th March 2024](exams/2024/03-11-validation_test)
- 2. [22nd May 2024 - Home-made Test](exams/2024/05-22-homemade-test)
+ 2. [22nd May 2024 - Home-made Test](exams/2024/05-22)
 
 ## Lessons
 
