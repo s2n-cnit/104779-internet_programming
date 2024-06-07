@@ -3,11 +3,11 @@ from typing import Annotated, List
 from auth import RoleChecker
 from db import DB
 from fastapi import Depends
-from model import Result, User
+from model import Result, User, UserCreate, UserUpdate, UserPublic
 
 from . import router
 
-db_user = DB[User, "User"]
+db_user = DB[User](User, "User")
 
 
 @router.post("/user", tags=["User"], summary="Create a new user")
@@ -15,7 +15,7 @@ async def admin_create_user(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
-    user: User,
+    user: UserCreate,
 ) -> Result:
     return db_user.create(user, current_user)
 
@@ -25,7 +25,7 @@ async def admin_read_users(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ]
-) -> List[User]:
+) -> List[UserPublic]:
     return db_user.read_all()
 
 
@@ -37,16 +37,17 @@ async def admin_read_user(
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     user_id: str,
-) -> User:
+) -> UserPublic:
     return db_user.read(user_id)
 
 
-@router.put("/user", tags=["User"], summary="Update a user")
+@router.put("/user/{user_id}", tags=["User"], summary="Update a user")
 async def admin_update_user(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
-    user: User,
+    user_id: str,
+    user: UserUpdate,
 ) -> Result:
     return db_user.update(user, current_user)
 
@@ -57,5 +58,5 @@ async def admin_delete_user(
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     user_id: str,
-) -> User:
+) -> Result:
     return db_user.delete(user_id)

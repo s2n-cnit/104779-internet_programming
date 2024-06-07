@@ -138,7 +138,7 @@ class UserPublic(BasePublic):
 
 
 class User(UserCreate, BasePublic, table=True):
-    books: list["Book"] = Relationship(
+    books_created: list["Book"] = Relationship(
         back_populates="created_by",
         sa_relationship_kwargs={
             "primaryjoin": "Book.created_by_id==User.id",
@@ -229,10 +229,10 @@ class Customer(CustomerPublic, table=True):
     )
     loans: list[Loan] = Relationship(
         back_populates="customer",
-        # sa_relationship_kwargs={
-        #     "primaryjoin": "Loan.customer_id==Customer.id",
-        #     "lazy": "joined",
-        # },
+        sa_relationship_kwargs={
+            "primaryjoin": "Loan.customer_id==Customer.id",
+            "lazy": "joined",
+        },
     )
     created_by: User = Relationship(
         back_populates="customers_created",
@@ -283,14 +283,14 @@ class Book(BookPublic, table=True):
         },
     )
     created_by: User = Relationship(
-        back_populates="books",
+        back_populates="books_created",
         sa_relationship_kwargs={
             "primaryjoin": "Book.created_by_id==User.id",
             "lazy": "joined",
         },
     )
     updated_by: User = Relationship(
-        back_populates="books",
+        back_populates="books_updated",
         sa_relationship_kwargs={
             "primaryjoin": "Book.updated_by_id==User.id",
             "lazy": "joined",

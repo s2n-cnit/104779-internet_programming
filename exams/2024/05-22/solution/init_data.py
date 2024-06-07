@@ -1,9 +1,15 @@
-from datetime import datetime
+# import os
 
-from model import Role, User, engine
-from passlib.context import CryptContext
-from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session
+# db_filepath = "yalb.db"
+# if os.path.exists(db_filepath):
+#     os.remove(db_filepath)
+
+from datetime import datetime  # noqa: E402
+from model import Role, User, engine  # noqa: E402
+from passlib.context import CryptContext  # noqa: E402
+from sqlalchemy.exc import IntegrityError  # noqa: E402
+from sqlmodel import Session  # noqa: E402
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

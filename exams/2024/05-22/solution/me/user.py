@@ -7,7 +7,7 @@ from model import Result, User, UserPublic
 
 from . import router
 
-db_user = DB[User, "User"]
+db_user = DB[User](User, "User")
 
 
 @router.get("/", tags=["User"], summary="Get my details")
