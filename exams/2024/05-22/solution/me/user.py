@@ -10,7 +10,10 @@ from . import router
 db_user = DB[User](User, "User")
 
 
-@router.get("/", tags=["User"], summary="Get my details")
+tags = ["Me - User"]
+
+
+@router.get("/", tags=tags, summary="Get my details")
 async def me_get(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
@@ -19,7 +22,7 @@ async def me_get(
     return current_user
 
 
-@router.delete("/", tags=["User"], summary="Remove my account")
+@router.delete("/", tags=tags, summary="Remove my account")
 async def me_delete(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))

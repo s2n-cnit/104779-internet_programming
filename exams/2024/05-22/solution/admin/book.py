@@ -9,18 +9,20 @@ from . import router
 
 db_book = DB[Book](Book, "Book")
 
+tags = ["Admin - Book"]
 
-@router.post("/book", tags=["Book"], summary="Insert a new book")
+
+@router.post("/book", tags=tags, summary="Insert a new book")
 async def admin_create_book(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     book: BookCreate,
 ) -> Result:
     return db_book.create(book, current_user)
 
 
-@router.get("/book", tags=["Book"], summary="Get all the books")
+@router.get("/book", tags=tags, summary="Get all the books")
 async def admin_read_books(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
@@ -29,9 +31,7 @@ async def admin_read_books(
     return db_book.read_all()
 
 
-@router.get(
-    "/book/{book_id}", tags=["Book"], summary="Get the details of a book"
-)
+@router.get("/book/{book_id}", tags=tags, summary="Get the details of a book")
 async def admin_read_book(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
@@ -41,7 +41,7 @@ async def admin_read_book(
     return db_book.read(book_id)
 
 
-@router.put("/book/{book_id}", tags=["Book"], summary="Update a book")
+@router.put("/book/{book_id}", tags=tags, summary="Update a book")
 async def admin_update_book(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
@@ -52,7 +52,7 @@ async def admin_update_book(
     return db_book.update(book, current_user)
 
 
-@router.delete("/book/{book_id}", tags=["Book"], summary="Delete a book")
+@router.delete("/book/{book_id}", tags=tags, summary="Delete a book")
 async def admin_delete_book(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))

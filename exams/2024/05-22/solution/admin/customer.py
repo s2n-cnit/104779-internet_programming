@@ -16,18 +16,20 @@ from . import router
 
 db_customer = DB[Customer](Customer, "Customer")
 
+tags = ["Admin - CuUstomer"]
 
-@router.post("/customer", tags=["Customer"], summary="Insert a new customer")
+
+@router.post("/customer", tags=tags, summary="Insert a new customer")
 async def admin_create_customer(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
     customer: CustomerCreate,
 ) -> Result:
     return db_customer.create(customer, current_user)
 
 
-@router.get("/customer", tags=["Customer"], summary="Get all the customers")
+@router.get("/customer", tags=tags, summary="Get all the customers")
 async def admin_read_customers(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
@@ -38,7 +40,7 @@ async def admin_read_customers(
 
 @router.get(
     "/customer/{customer_id}",
-    tags=["Customer"],
+    tags=tags,
     summary="Get the details of a customer",
 )
 async def admin_read_customer(
@@ -50,9 +52,7 @@ async def admin_read_customer(
     return db_customer.read(customer_id)
 
 
-@router.put(
-    "/customer/{customer_id}", tags=["Customer"], summary="Update a customer"
-)
+@router.put("/customer/{customer_id}", tags=tags, summary="Update a customer")
 async def admin_update_customer(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
@@ -64,7 +64,7 @@ async def admin_update_customer(
 
 
 @router.delete(
-    "/customer/{customer_id}", tags=["Customer"], summary="Delete a customer"
+    "/customer/{customer_id}", tags=tags, summary="Delete a customer"
 )
 async def admin_delete_customer(
     current_user: Annotated[

@@ -3,16 +3,35 @@ from typing import Annotated, List
 from auth import RoleChecker
 from db import DB
 from fastapi import Depends
-from model import Customer, CustomerPublic, CustomerUpdate, Result, User
+from model import (
+    Customer,
+    CustomerCreate,
+    CustomerPublic,
+    CustomerUpdate,
+    Result,
+    User,
+)
 
 from . import router
 
 db_customer = DB[Customer](Customer, "Customer")
 
+tags = ["Me - Customer"]
+
+
+@router.post("/customer", tags=tags, summary="Insert a new customer")
+async def admin_create_customer(
+    current_user: Annotated[
+        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+    ],
+    customer: CustomerCreate,
+) -> Result:
+    return db_customer.create(customer, current_user)
+
 
 @router.get(
     "/customer/created",
-    tags=["Customer"],
+    tags=tags,
     summary="Get all the created customers",
 )
 async def me_read_customers_created(
@@ -25,7 +44,7 @@ async def me_read_customers_created(
 
 @router.get(
     "/customer/updated",
-    tags=["Customer"],
+    tags=tags,
     summary="Get all the updated customers",
 )
 async def me_read_customers_updated(
@@ -38,7 +57,7 @@ async def me_read_customers_updated(
 
 @router.get(
     "/customer/{customer_id}",
-    tags=["Customer"],
+    tags=tags,
     summary="Get the details of the customer",
 )
 async def me_read_customer(
@@ -53,7 +72,9 @@ async def me_read_customer(
 
 
 @router.put(
-    "/customer/{customer_id}", tags=["Customer"], summary="Update a customer"
+    "/customer/{customer_id}",
+    tags=tags,
+    summary="Update a customer",
 )
 async def me_update_customer(
     current_user: Annotated[
