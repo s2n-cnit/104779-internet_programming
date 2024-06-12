@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from model import Token, User, engine
 from passlib.context import CryptContext
 from pydantic import ValidationError
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
