@@ -1,0 +1,88 @@
+// Use DBML to define your database structure
+// Docs https//dbml.dbdiagram.io/docs
+
+Table Role {
+  id varchar [primary key]
+  description text
+}
+
+Table User {
+  id varchar [primary key]
+  first_name varchar
+  last_name varchar
+  email varchar [unique]
+  password varchar
+  role_id varchar
+  disabled boolean
+  bio text
+  age integer
+  created_by_id varchar
+  created_at timestamp
+  updated_by_id varchar
+  updated_at timestamp
+}
+
+Ref: User.role_id > Role.id
+Ref: User.created_by_id > User.id
+Ref: User.updated_by_id > User.id
+
+enum Status {
+    completed
+    started
+    todo
+}
+
+Table Task {
+  id integer [primary key]
+  category_id varchar
+  status Status
+  completion_date timestamp
+  created_by_id varchar
+  created_at timestamp
+  updated_by_id varchar
+  updated_at timestamp
+}
+
+Ref: Task.category_id > Category.id
+Ref: Task.created_by_id > User.id
+Ref: Task.updated_by_id > User.id
+
+Table Category {
+  id integer [primary key]
+  name varchar
+  created_by_id varchar
+  created_at timestamp
+  updated_by_id varchar
+  updated_at timestamp
+}
+
+Ref: Category.created_by_id > User.id
+Ref: Category.updated_by_id > User.id
+
+Table Tag {
+  id integer [primary key]
+  name varchar
+  created_by_id varchar
+  created_at timestamp
+  updated_by_id varchar
+  updated_at timestamp
+}
+
+Ref: Tag.created_by_id > User.id
+Ref: Tag.updated_by_id > User.id
+
+
+Table TaskTag {
+  id integer [primary key]
+  task_id integer
+  tag_id integer
+  created_by_id varchar
+  created_at timestamp
+
+  Indexes {
+    (task_id, tag_id) [unique]
+  }
+}
+
+Ref: TaskTag.task_id > Task.id
+Ref: TaskTag.tag_id > Tag.id
