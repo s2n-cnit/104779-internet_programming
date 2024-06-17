@@ -49,7 +49,7 @@ async def admin_update_tag(
     tag_id: int,
     tag: TagUpdate,
 ) -> Result:
-    return db_tag.update(tag, current_user)
+    return db_tag.update(tag_id, tag, current_user)
 
 
 @router.delete("/tag/{tag_id}", tags=tags, summary="Delete a tag")

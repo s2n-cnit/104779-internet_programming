@@ -1,9 +1,9 @@
 from datetime import datetime
+from enum import Enum
 from typing import List, Optional
 
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
-from sqlmodel import Enum as SQLModelEnum
 from sqlmodel import Field, Relationship, SQLModel, create_engine
 
 # Base
@@ -42,7 +42,7 @@ class TaskTag(SQLModel, table=True):
 # Task
 
 
-class Status(str, SQLModelEnum):
+class Status(Enum):
     COMPLETED = "completed"
     STARTED = "started"
     TODO = "todo"
@@ -50,7 +50,7 @@ class Status(str, SQLModelEnum):
 
 class TaskCreate(SQLModel):
     category_id: int = Field(foreign_key="category.id")
-    status: Column(SQLModelEnum(Status))
+    status: Status = Field(default=Status.TODO)
     completion_date: Optional[datetime] = Field(default=None)
 
 
@@ -77,6 +77,13 @@ class Task(TaskPublic, table=True):
         back_populates="tasks_created",
         sa_relationship_kwargs={
             "primaryjoin": "Task.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    updated_by: "User" = Relationship(
+        back_populates="tasks_updated",
+        sa_relationship_kwargs={
+            "primaryjoin": "Task.updated_by_id==User.id",
             "lazy": "joined",
         },
     )
@@ -171,13 +178,6 @@ class User(UserCreate, BasePublic, table=True):
         back_populates="created_by",
         sa_relationship_kwargs={
             "primaryjoin": "TaskTag.created_by_id==User.id",
-            "lazy": "joined",
-        },
-    )
-    task_tags_updated: list["TaskTag"] = Relationship(
-        back_populates="updated_by",
-        sa_relationship_kwargs={
-            "primaryjoin": "TaskTag.updated_by_id==User.id",
             "lazy": "joined",
         },
     )

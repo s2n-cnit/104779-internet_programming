@@ -64,7 +64,7 @@ async def me_read_category(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
-    category_id: str,
+    category_id: int,
 ) -> CategoryPublic:
     return db_category.read_personal(
         category_id, current_user.categories_created
@@ -83,5 +83,5 @@ async def me_update_category(
     category_id: int,
     category: CategoryUpdate,
 ) -> Result:
-    db_category.read_personal(category.id, current_user.categories_created)
+    db_category.read_personal(category_id, current_user.categories_created)
     return db_category.create(category, current_user)

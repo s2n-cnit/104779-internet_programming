@@ -57,7 +57,7 @@ async def me_read_task(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
-    task_id: str,
+    task_id: int,
 ) -> TaskPublic:
     return db_task.read_personal(task_id, current_user.tasks_created)
 
@@ -70,5 +70,5 @@ async def me_update_task(
     task_id: int,
     task: TaskUpdate,
 ) -> Result:
-    db_task.read_personal(task.id, current_user.tasks_created)
+    db_task.read_personal(task_id, current_user.tasks_created)
     return db_task.create(task, current_user)

@@ -60,7 +60,7 @@ async def admin_update_category(
     category_id: int,
     category: CategoryUpdate,
 ) -> Result:
-    return db_category.update(category, current_user)
+    return db_category.update(category_id, category, current_user)
 
 
 @router.delete(

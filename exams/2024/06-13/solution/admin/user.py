@@ -49,7 +49,7 @@ async def admin_update_user(
     user_id: str,
     user: UserUpdate,
 ) -> Result:
-    return db_user.update(user, current_user)
+    return db_user.update(user_id, user, current_user)
 
 
 @router.delete("/user/{user_id}", tags=tags, summary="Delete a user")

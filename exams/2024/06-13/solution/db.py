@@ -41,16 +41,19 @@ class DB[ModelType: SQLModel]:
     def read(self: Self, id: str | int) -> ModelType:
         try:
             with Session(engine) as session:
-                book_db = session.get(self.model_type, id)
-                if not book_db:
+                db = session.get(self.model_type, id)
+                if not db:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"{self.model_text} {id} not found",
                     )
+                return db
         except Exception as e:
             raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
 
-    def update(self: Self, model: ModelType, user: User) -> ModelType:
+    def update(
+        self: Self, id: str | int, model: ModelType, user: User
+    ) -> ModelType:
         try:
             with Session(engine) as session:
                 model = self.read(id)

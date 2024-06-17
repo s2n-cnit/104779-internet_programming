@@ -49,7 +49,7 @@ async def admin_update_task(
     task_id: int,
     task: TaskUpdate,
 ) -> Result:
-    return db_task.update(task, current_user)
+    return db_task.update(task_id, task, current_user)
 
 
 @router.delete("/task/{task_id}", tags=tags, summary="Delete a task")

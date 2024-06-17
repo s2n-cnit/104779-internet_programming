@@ -57,7 +57,7 @@ async def me_read_tag(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
-    tag_id: str,
+    tag_id: int,
 ) -> TagPublic:
     return db_tag.read_personal(tag_id, current_user.tags_created)
 
@@ -70,5 +70,5 @@ async def me_update_tag(
     tag_id: int,
     tag: TagUpdate,
 ) -> Result:
-    db_tag.read_personal(tag.id, current_user.tags_created)
+    db_tag.read_personal(tag_id, current_user.tags_created)
     return db_tag.create(tag, current_user)
