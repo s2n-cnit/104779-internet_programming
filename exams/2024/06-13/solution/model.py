@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Self
 
+from error import ConflictException
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 from sqlmodel import Field, Relationship, SQLModel, create_engine
@@ -51,23 +52,23 @@ class Status(Enum):
 class TaskCreate(SQLModel):
     name: str
     category_id: int = Field(foreign_key="category.id")
-    status: Status = Field(default=Status.TODO)
-    started_date: Optional[datetime] = Field(default=None)
-    completed_date: Optional[datetime] = Field(default=None)
+    started_at: Optional[datetime] = Field(default=None)
+    completed_at: Optional[datetime] = Field(default=None)
 
 
 class TaskUpdate(SQLModel):
     name: Optional[str] = None
     category_id: Optional[int] = Field(foreign_key="category.id", default=None)
     status: Optional[Status] = Field(default=None)
-    started_date: Optional[datetime] = Field(default=None)
-    completed_date: Optional[datetime] = Field(default=None)
+    started_at: Optional[datetime] = Field(default=None)
+    completed_at: Optional[datetime] = Field(default=None)
 
 
 class TaskPublic(TaskCreate, BasePublic):
     id: int = Field(
         sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
     )
+    status: Status = Field(default=Status.TODO)
 
 
 class Task(TaskPublic, table=True):
@@ -97,13 +98,15 @@ class Task(TaskPublic, table=True):
     def additional_updates(self: Self) -> Self:
         match self.status:
             case Status.TODO:
-                self.started_date = None
-                self.completed_date = None
+                self.started_at = None
+                self.completed_at = None
             case Status.STARTED:
-                self.started_date = datetime.now()
-                self.completed_date = None
+                self.started_at = datetime.now()
+                self.completed_at = None
             case Status.COMPLETED:
-                self.completed_date = datetime.now()
+                if self.started_at is None:
+                    raise ConflictException(target="Task", id=self.id)
+                self.completed_at = datetime.now()
 
 
 # Role

@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, List
 
 from auth import RoleChecker
 from db import DB
@@ -30,6 +30,35 @@ async def me_create_task_tag(
         current_user.tags_created + current_user.tags_updated,
     )
     return db_task_tag.create(task_tag, current_user)
+
+
+@router.get(
+    "/task-tag/created",
+    tags=tags,
+    summary="Get all the created task-tag relationships",
+)
+async def me_read_task_tags_created(
+    current_user: Annotated[
+        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+    ],
+) -> List[TaskTag]:
+    return current_user.task_tags_created
+
+
+@router.get(
+    "/task-tag/{task_tag_id}",
+    tags=tags,
+    summary="Get the details of a task-tag relationship",
+)
+async def me_read_task_tag(
+    current_user: Annotated[
+        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+    ],
+    task_tag_id: int,
+) -> TaskTag:
+    return db_task_tag.read_personal(
+        task_tag_id, current_user.task_tags_created
+    )
 
 
 @router.delete(

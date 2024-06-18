@@ -12,7 +12,7 @@ import me.task  # noqa: F401
 import me.task_tag  # noqa: F401
 from admin import router as router_admin
 from auth import router as router_auth
-from error import NotFoundException, not_found_exception_handler
+from error import ConflictException, NotFoundException, exception_handler
 from fastapi import FastAPI
 from me import router as router_me
 
@@ -24,4 +24,5 @@ app = FastAPI(title=app_name.upper(), debug=True)
 app.include_router(router_me)
 app.include_router(router_admin)
 app.include_router(router_auth)
-app.add_exception_handler(NotFoundException, not_found_exception_handler)
+app.add_exception_handler(NotFoundException, exception_handler)
+app.add_exception_handler(ConflictException, exception_handler)

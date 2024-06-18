@@ -69,25 +69,32 @@ class DB[ModelType: SQLModel]:
     ) -> ModelType:
         model_db = self.read(id)
         print(model_db)
-        try:
-            with Session(engine) as session:
+        with Session(engine) as session:
+            try:
                 model_data = model.model_dump(exclude_unset=True)
                 print(model_data)
                 for key, value in model_data.items():
                     setattr(model_db, key, value)
                 model_db.updated_by_id = user.id
-                if hasattr(model_db, "additional_updates") and callable(
-                    model_db.additional_updates
-                ):
-                    model_db.additional_updates()
+            except Exception as e:
+                raise HTTPException(
+                    status.HTTP_500_INTERNAL_SERVER_ERROR, str(e)
+                )
+            if hasattr(model_db, "additional_updates") and callable(
+                model_db.additional_updates
+            ):
+                model_db.additional_updates()
+            try:
                 session.add(model_db)
                 session.commit()
                 session.refresh(model_db)
                 return Result(
                     action=Action.UPDATED, target=self.model_text, id=id
                 )
-        except Exception as e:
-            raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+            except Exception as e:
+                raise HTTPException(
+                    status.HTTP_500_INTERNAL_SERVER_ERROR, str(e)
+                )
 
     def delete(self: Self, id: str | int) -> Result:
         model = self.read(id)
