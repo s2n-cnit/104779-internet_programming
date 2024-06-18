@@ -31,7 +31,7 @@ class __summary(str, Enum):
     UPDATE = "Update a tag"
 
 
-@router.post(__db.prefix(), tags=__db.tags, summary="Insert a new tag")
+@router.post(__db.prefix(), tags=__db.tags, summary=__summary.CREATE)
 async def create(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
@@ -78,7 +78,7 @@ async def read(
     ],
     id: int,
 ) -> TagPublic:
-    return db_tag.read_personal(id, current_user.tags_created)
+    return __db.tag.read_personal(id, current_user.tags_created)
 
 
 @router.put(__db.prefix(id=True), tags=__db.tags, summary=__summary.UPDATE)

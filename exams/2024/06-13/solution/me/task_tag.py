@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Annotated, List
 
 from auth import RoleChecker
@@ -7,71 +8,84 @@ from model import Result, Tag, Task, TaskTag, User
 
 from . import router
 
-db_task_tag = DB[TaskTag](TaskTag, "TaskTag")
-db_task = DB[Task](Task, "Task")
-db_tag = DB[Tag](Tag, "Task")
 
-tags = ["Me - Task / Tag"]
+class __db:
+    tags = ["Me - Task / Tag"]
+    task_tag = DB[TaskTag](TaskTag, "TaskTag")
+    task = DB[Task](Task, "Task")
+    tag = DB[Tag](Tag, "Task")
+    allowed_roles_ids = ["admin", "user"]
+
+    def prefix(id: bool = False, created: bool = False, updated: bool = False):
+        return (
+            "/task-tag"
+            + ("/{id}" if id else "")
+            + ("/{created}" if created else "")
+            + ("/{updated}" if updated else "")
+        )
 
 
-@router.post("/task-tag", tags=tags, summary="Add a new tag to the task")
-async def me_create_task_tag(
+class __summary(str, Enum):
+    CREATE = "Add a new tag to the task"
+    READ_ALL_CREATED = "Get all the created task-tag relationships"
+    READ = "Get the details of a task-tag relationship"
+    DELETE = "Remove a tag from the task"
+
+
+@router.post(__db.prefix(), tags=__db.tags, summary=__summary.CREATE)
+async def create(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
     task_tag: TaskTag,
 ) -> Result:
-    db_task.read_personal(
+    __db.task.read_personal(
         task_tag.task_id,
         current_user.tasks_created + current_user.tasks_updated,
     )
-    db_tag.read_personal(
+    __db.tag.read_personal(
         task_tag.tag_id,
         current_user.tags_created + current_user.tags_updated,
     )
-    return db_task_tag.create(task_tag, current_user)
+    return __db.task_tag.create(task_tag, current_user)
 
 
 @router.get(
-    "/task-tag/created",
-    tags=tags,
-    summary="Get all the created task-tag relationships",
+    __db.prefix(created=True),
+    tags=__db.tags,
+    summary=__summary.READ_ALL_CREATED,
 )
-async def me_read_task_tags_created(
+async def read_all_created(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
 ) -> List[TaskTag]:
     return current_user.task_tags_created
 
 
 @router.get(
-    "/task-tag/{task_tag_id}",
-    tags=tags,
-    summary="Get the details of a task-tag relationship",
+    __db.prefix(id=True),
+    tags=__db.tags,
+    summary=__summary.READ,
 )
-async def me_read_task_tag(
+async def read(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    task_tag_id: int,
+    id: int,
 ) -> TaskTag:
-    return db_task_tag.read_personal(
-        task_tag_id, current_user.task_tags_created
-    )
+    return __db.task_tag.read_personal(id, current_user.task_tags_created)
 
 
-@router.delete(
-    "/task-tag/{task_tag_id}", tags=tags, summary="Remove a tag from the task"
-)
-async def me_delete_task_tag(
+@router.delete(__db.prefix(id=True), tags=__db.tags, summary=__summary.DELETE)
+async def delete(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    task_tag_id: int,
+    id: int,
 ) -> Result:
-    db_task_tag.read_personal(
-        task_tag_id,
+    __db.task_tag.read_personal(
+        id,
         current_user.task_tags_created,
     )
-    return db_task_tag.delete(task_tag_id)
+    return __db.task_tag.delete(id)

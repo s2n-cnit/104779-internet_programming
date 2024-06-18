@@ -43,7 +43,7 @@ async def create(
     return __db.category.create(category, current_user)
 
 
-@router.get(__db.prefix(), tags=__db.tags, summary="Get all the categories")
+@router.get(__db.prefix(), tags=__db.tags, summary=__summary.READ_ALL)
 async def read_all(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
