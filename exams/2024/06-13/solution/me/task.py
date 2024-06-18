@@ -3,22 +3,35 @@ from typing import Annotated, List
 from auth import RoleChecker
 from db import DB
 from fastapi import Depends
-from model import Result, Task, TaskCreate, TaskPublic, TaskUpdate, User
+from model import (
+    Category,
+    Result,
+    Task,
+    TaskCreate,
+    TaskPublic,
+    TaskUpdate,
+    User,
+)
 
 from . import router
 
 db_task = DB[Task](Task, "Task")
+db_category = DB[Category](Category, "Category")
 
 tags = ["Me - Task"]
 
 
 @router.post("/task", tags=tags, summary="Insert a new task")
-async def admin_create_task(
+async def me_create_task(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
     task: TaskCreate,
 ) -> Result:
+    db_category.read_personal(
+        task.category_id,
+        current_user.categories_created + current_user.categories_updated,
+    )
     return db_task.create(task, current_user)
 
 
@@ -71,4 +84,4 @@ async def me_update_task(
     task: TaskUpdate,
 ) -> Result:
     db_task.read_personal(task_id, current_user.tasks_created)
-    return db_task.create(task, current_user)
+    return db_task.update(task_id, task, current_user)

@@ -84,4 +84,4 @@ async def me_update_category(
     category: CategoryUpdate,
 ) -> Result:
     db_category.read_personal(category_id, current_user.categories_created)
-    return db_category.create(category, current_user)
+    return db_category.update(category_id, category, current_user)

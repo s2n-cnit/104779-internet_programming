@@ -71,4 +71,4 @@ async def me_update_tag(
     tag: TagUpdate,
 ) -> Result:
     db_tag.read_personal(tag_id, current_user.tags_created)
-    return db_tag.create(tag, current_user)
+    return db_tag.update(tag_id, tag, current_user)

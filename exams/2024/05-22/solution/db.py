@@ -1,4 +1,4 @@
-from typing import List, Type, Self
+from typing import List, Self, Type
 
 from fastapi import HTTPException, status
 from model import Result, User, engine

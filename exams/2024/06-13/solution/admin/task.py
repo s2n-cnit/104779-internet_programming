@@ -3,11 +3,20 @@ from typing import Annotated, List
 from auth import RoleChecker
 from db import DB
 from fastapi import Depends
-from model import Result, Task, TaskCreate, TaskPublic, TaskUpdate, User
+from model import (
+    Category,
+    Result,
+    Task,
+    TaskCreate,
+    TaskPublic,
+    TaskUpdate,
+    User,
+)
 
 from . import router
 
 db_task = DB[Task](Task, "Task")
+db_category = DB[Category](Category, "Category")
 
 tags = ["Admin - Task"]
 
@@ -19,6 +28,7 @@ async def admin_create_task(
     ],
     task: TaskCreate,
 ) -> Result:
+    db_category.read(task.category_id)
     return db_task.create(task, current_user)
 
 

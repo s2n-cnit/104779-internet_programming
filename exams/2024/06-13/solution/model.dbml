@@ -34,9 +34,11 @@ enum Status {
 
 Table Task {
   id integer [primary key]
+  name varchar
   category_id varchar
   status Status
-  completion_date timestamp
+  started_date timestamp
+  completed_date timestamp
   created_by_id varchar
   created_at timestamp
   updated_by_id varchar

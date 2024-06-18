@@ -59,7 +59,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-    except jwt.JWTError:
+    except jwt.DecodeError:
         raise credentials_exception
     user = get_user(username)
     if user is None:
@@ -91,8 +91,7 @@ async def validate_refresh_token(
                 raise credentials_exception
         else:
             raise credentials_exception
-
-    except (jwt.JWTError, ValidationError):
+    except (jwt.DecodeError, ValidationError):
         raise credentials_exception
     user = get_user(username)
     if user is None:

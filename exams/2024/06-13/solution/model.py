@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional
+from typing import List, Optional, Self
 
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
@@ -49,13 +49,19 @@ class Status(Enum):
 
 
 class TaskCreate(SQLModel):
+    name: str
     category_id: int = Field(foreign_key="category.id")
     status: Status = Field(default=Status.TODO)
-    completion_date: Optional[datetime] = Field(default=None)
+    started_date: Optional[datetime] = Field(default=None)
+    completed_date: Optional[datetime] = Field(default=None)
 
 
-class TaskUpdate(TaskCreate):
-    pass
+class TaskUpdate(SQLModel):
+    name: Optional[str] = None
+    category_id: Optional[int] = Field(foreign_key="category.id", default=None)
+    status: Optional[Status] = Field(default=None)
+    started_date: Optional[datetime] = Field(default=None)
+    completed_date: Optional[datetime] = Field(default=None)
 
 
 class TaskPublic(TaskCreate, BasePublic):
@@ -87,6 +93,17 @@ class Task(TaskPublic, table=True):
             "lazy": "joined",
         },
     )
+
+    def additional_updates(self: Self) -> Self:
+        match self.status:
+            case Status.TODO:
+                self.started_date = None
+                self.completed_date = None
+            case Status.STARTED:
+                self.started_date = datetime.now()
+                self.completed_date = None
+            case Status.COMPLETED:
+                self.completed_date = datetime.now()
 
 
 # Role
@@ -312,17 +329,27 @@ class Tag(TagPublic, table=True):
 
 
 class Result(BaseModel):
+    action: str
+    target: str
+    id: str | int
     success: bool
-    detail: str
-    timestamp: datetime
+    error: bool
+    # timestamp: datetime # FIXME not JSON serializable
 
     def __init__(
-        self: "Result",
-        detail: str,
+        self: Self,
+        target: str,
+        id: Optional[str | int],
+        action: str,
         success: bool = True,
-    ) -> "Result":
+    ) -> Self:
         super().__init__(
-            success=success, detail=detail, timestamp=datetime.now()
+            action=action,
+            target=target,
+            id=id,
+            # timestamp=datetime.now(), # FIXME not JSON serializable
+            success=success,
+            error=not success,
         )
 
 
@@ -337,6 +364,6 @@ class Token[Type: SQLModel](BaseModel):
 sqlite_file_name = "yatms.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 
-engine = create_engine(sqlite_url, echo=True)
+engine = create_engine(sqlite_url, echo=False)
 
 SQLModel.metadata.create_all(engine)
