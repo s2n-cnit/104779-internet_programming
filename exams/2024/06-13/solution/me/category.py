@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Annotated, List
 
 from auth import RoleChecker
@@ -14,74 +15,90 @@ from model import (
 
 from . import router
 
-db_category = DB[Category](Category, "Category")
 
-tags = ["Me - Category"]
+class __db:
+    tags = ["Me - Category"]
+    category = DB[Category](Category, "Category")
+    allowed_roles_ids = ["admin", "user"]
+
+    def prefix(id: bool = False, created: bool = False, updated: bool = False):
+        return (
+            "/category"
+            + ("/{id}" if id else "")
+            + ("/{created}" if created else "")
+            + ("/{updated}" if updated else "")
+        )
 
 
-@router.post("/category", tags=tags, summary="Insert a new category")
-async def admin_create_category(
+class __summary(str, Enum):
+    CREATE = "Insert a new category"
+    READ_ALL_CREATED = "Get all the created categories"
+    READ_ALL_UPDATED = "Get all the updated categories"
+    READ = "Get the details of a category"
+    UPDATE = "Update a category"
+
+
+@router.post(__db.prefix(), tags=__db.tags, summary=__summary.CREATE)
+async def create(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
     category: CategoryCreate,
 ) -> Result:
-    return db_category.create(category, current_user)
+    return __db.category.create(category, current_user)
 
 
 @router.get(
-    "/category/created",
-    tags=tags,
-    summary="Get all the created categories",
+    __db.prefix(created=True),
+    tags=__db.tags,
+    summary=__summary.READ_ALL_CREATED,
 )
-async def me_read_categories_created(
+async def read_all_created(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
 ) -> List[CategoryPublic]:
     return current_user.categories_created
 
 
 @router.get(
-    "/category/updated",
-    tags=tags,
-    summary="Get all the updated categories",
+    __db.prefix(updated=True),
+    tags=__db.tags,
+    summary=__summary.READ_ALL_UPDATED,
 )
-async def me_read_categories_updated(
+async def read_all_updated(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
 ) -> List[CategoryPublic]:
     return current_user.categories_updated
 
 
 @router.get(
-    "/category/{category_id}",
-    tags=tags,
-    summary="Get the details of the category",
+    __db.prefix(id=True),
+    tags=__db.tags,
+    summary=__summary.READ,
 )
-async def me_read_category(
+async def read(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    category_id: int,
+    id: int,
 ) -> CategoryPublic:
-    return db_category.read_personal(
-        category_id, current_user.categories_created
-    )
+    return __db.category.read_personal(id, current_user.categories_created)
 
 
 @router.put(
-    "/category/{category_id}",
-    tags=tags,
-    summary="Update a category",
+    __db.prefix(id=True),
+    tags=__db.tags,
+    summary=__summary.UPDATE,
 )
-async def me_update_category(
+async def update(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    category_id: int,
+    id: int,
     category: CategoryUpdate,
 ) -> Result:
-    db_category.read_personal(category_id, current_user.categories_created)
-    return db_category.update(category_id, category, current_user)
+    __db.category.read_personal(id, current_user.categories_created)
+    return __db.category.update(id, category, current_user)

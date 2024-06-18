@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Annotated, List
 
 from auth import RoleChecker
@@ -7,68 +8,86 @@ from model import Result, Tag, TagCreate, TagPublic, TagUpdate, User
 
 from . import router
 
-db_tag = DB[Tag](Tag, "Tag")
 
-tags = ["Me - Tag"]
+class __db:
+    tags = ["Me - Tag"]
+    tag = DB[Tag](Tag, "Tag")
+    allowed_roles_ids = ["admin", "user"]
+
+    def prefix(id: bool = False, created: bool = False, updated: bool = False):
+        return (
+            "/tag"
+            + ("/{id}" if id else "")
+            + ("/{created}" if created else "")
+            + ("/{updated}" if updated else "")
+        )
 
 
-@router.post("/tag", tags=tags, summary="Insert a new tag")
-async def me_create_tag(
+class __summary(str, Enum):
+    CREATE = "Insert a new tag"
+    READ_ALL_CREATED = "Get all the created tags"
+    READ_ALL_UPDATED = "Get all the updated tags"
+    READ = "Get the details of a tag"
+    UPDATE = "Update a tag"
+
+
+@router.post(__db.prefix(), tags=__db.tags, summary="Insert a new tag")
+async def create(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
     tag: TagCreate,
 ) -> Result:
-    return db_tag.create(tag, current_user)
+    return __db.tag.create(tag, current_user)
 
 
 @router.get(
-    "/tag/created",
-    tags=tags,
-    summary="Get all the created tags",
+    __db.prefix(created=True),
+    tags=__db.tags,
+    summary=__summary.READ_ALL_CREATED,
 )
-async def me_read_tags_created(
+async def read_all_created(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
 ) -> List[TagPublic]:
     return current_user.tags_created
 
 
 @router.get(
-    "/tag/updated",
-    tags=tags,
-    summary="Get all the updated tags",
+    __db.prefix(updated=True),
+    tags=__db.tags,
+    summary=__summary.READ_ALL_UPDATED,
 )
-async def me_read_tags_updated(
+async def read_all_updated(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
 ) -> List[TagPublic]:
     return current_user.tags_updated
 
 
 @router.get(
-    "/tag/{tag_id}",
-    tags=tags,
-    summary="Get the details of the tag",
+    __db.prefix(id=True),
+    tags=__db.tags,
+    summary=__summary.READ,
 )
-async def me_read_tag(
+async def read(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    tag_id: int,
+    id: int,
 ) -> TagPublic:
-    return db_tag.read_personal(tag_id, current_user.tags_created)
+    return db_tag.read_personal(id, current_user.tags_created)
 
 
-@router.put("/tag/{tag_id}", tags=tags, summary="Update a tag")
+@router.put(__db.prefix(id=True), tags=__db.tags, summary=__summary.UPDATE)
 async def me_update_tag(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    tag_id: int,
+    id: int,
     tag: TagUpdate,
 ) -> Result:
-    db_tag.read_personal(tag_id, current_user.tags_created)
-    return db_tag.update(tag_id, tag, current_user)
+    __db.tag.read_personal(id, current_user.tags_created)
+    return __db.tag.update(id, tag, current_user)

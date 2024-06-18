@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Annotated, List
 
 from auth import RoleChecker
@@ -7,56 +8,69 @@ from model import Result, Tag, TagCreate, TagPublic, TagUpdate, User
 
 from . import router
 
-db_tag = DB[Tag](Tag, "Tag")
 
-tags = ["Admin - Tag"]
+class __db:
+    tags = ["Admin - Tag"]
+    tag = DB[Tag](Tag, "Tag")
+    allowed_roles_ids = ["admin"]
+
+    def prefix(id: bool = False):
+        return "/tag" + ("/{id}" if id else "")
 
 
-@router.post("/tag", tags=tags, summary="Insert a new tag")
-async def admin_create_tag(
+class __summary(str, Enum):
+    CREATE = "Insert a new tag"
+    READ_ALL = "Get all the tags"
+    READ = "Get the details of a tag"
+    UPDATE = "Update a tag"
+    DELETE = "Delete a tag"
+
+
+@router.post(__db.prefix(), tags=__db.tags, summary=__summary.CREATE)
+async def create(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
     tag: TagCreate,
 ) -> Result:
-    return db_tag.create(tag, current_user)
+    return __db.tag.create(tag, current_user)
 
 
-@router.get("/tag", tags=tags, summary="Get all the tags")
-async def admin_read_tags(
+@router.get("/tag", tags=__db.tags, summary=__summary.READ_ALL)
+async def read_all(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ]
 ) -> List[TagPublic]:
-    return db_tag.read_all()
+    return __db.tag.read_all()
 
 
-@router.get("/tag/{tag_id}", tags=tags, summary="Get the details of a tag")
-async def admin_read_tag(
+@router.get(__db.prefix(id=True), tags=__db.tags, summary=__summary.READ)
+async def read(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    tag_id: int,
+    id: int,
 ) -> TagPublic:
-    return db_tag.read(tag_id)
+    return __db.tag.read(id)
 
 
-@router.put("/tag/{tag_id}", tags=tags, summary="Update a tag")
-async def admin_update_tag(
+@router.put(__db.prefix(id=True), tags=__db.tags, summary=__summary.UPDATE)
+async def update(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    tag_id: int,
+    id: int,
     tag: TagUpdate,
 ) -> Result:
-    return db_tag.update(tag_id, tag, current_user)
+    return __db.tag.update(id, tag, current_user)
 
 
-@router.delete("/tag/{tag_id}", tags=tags, summary="Delete a tag")
-async def admin_delete_tag(
+@router.delete(__db.prefix(id=True), tags=__db.tags, summary=__summary.DELETE)
+async def delete(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin"]))
     ],
-    tag_id: int,
+    id: int,
 ) -> Result:
-    return db_tag.delete(tag_id)
+    return __db.tag.delete(id)

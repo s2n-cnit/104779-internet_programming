@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Annotated, List
 
 from auth import RoleChecker
@@ -15,58 +16,71 @@ from model import (
 
 from . import router
 
-db_task = DB[Task](Task, "Task")
-db_category = DB[Category](Category, "Category")
 
-tags = ["Admin - Task"]
+class __db:
+    tags = ["Admin - Task"]
+    task = DB[Task](Task, "Task")
+    category = DB[Category](Category, "Category")
+    allowed_roles_ids = ["admin"]
+
+    def prefix(id: bool = False):
+        return "/task" + ("/{id}" if id else "")
 
 
-@router.post("/task", tags=tags, summary="Insert a new task")
-async def admin_create_task(
+class __summary(str, Enum):
+    CREATE = "Insert a new task"
+    READ_ALL = "Get all the tasks"
+    READ = "Get the details of a task"
+    UPDATE = "Update a task"
+    DELETE = "Delete a task"
+
+
+@router.post(__db.prefix(), tags=__db.tags, summary=__summary.CREATE)
+async def create(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
     task: TaskCreate,
 ) -> Result:
-    db_category.read(task.category_id)
-    return db_task.create(task, current_user)
+    __db.category.read(task.category_id)
+    return __db.task.create(task, current_user)
 
 
-@router.get("/task", tags=tags, summary="Read all tasks")
-async def admin_read_tasks(
+@router.get(__db.prefix(), tags=__db.tags, summary=__summary.READ_ALL)
+async def read_all(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ]
 ) -> List[TaskPublic]:
-    return db_task.read_all()
+    return __db.task.read_all()
 
 
-@router.get("/task/{task_id}", tags=tags, summary="Get the details of a task")
-async def admin_read_task(
+@router.get(__db.prefix(id=True), tags=__db.tags, summary=__summary.READ)
+async def read(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    task_id: int,
+    id: int,
 ) -> TaskPublic:
-    return db_task.read(task_id)
+    return __db.task.read(id)
 
 
-@router.put("/task/{task_id}", tags=tags, summary="Update a task")
-async def admin_update_task(
+@router.put(__db.prefix(id=True), tags=__db.tags, summary=__summary.DELETE)
+async def update(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    task_id: int,
+    id: int,
     task: TaskUpdate,
 ) -> Result:
-    return db_task.update(task_id, task, current_user)
+    return __db.task.update(id, task, current_user)
 
 
-@router.delete("/task/{task_id}", tags=tags, summary="Delete a task")
-async def admin_delete_task(
+@router.delete(__db.prefix(id=True), tags=__db.tags, summary=__summary.DELETE)
+async def delete(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    task_id: int,
+    id: int,
 ) -> Result:
-    return db_task.delete(task_id)
+    return __db.task.delete(id)

@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Annotated, List
 
 from auth import RoleChecker
@@ -7,56 +8,69 @@ from model import Result, User, UserCreate, UserPublic, UserUpdate
 
 from . import router
 
-db_user = DB[User](User, "User")
 
-tags = ["Admin - User"]
+class __db:
+    tags = ["Admin - User"]
+    user = DB[User](User, "User")
+    allowed_roles_ids = ["admin"]
+
+    def prefix(id: bool = False):
+        return "/user" + ("/{id}" if id else "")
 
 
-@router.post("/user", tags=tags, summary="Create a new user")
-async def admin_create_user(
+class __summary(str, Enum):
+    CREATE = "Insert a new user"
+    READ_ALL = "Get all the users"
+    READ = "Get the details of a user"
+    UPDATE = "Update a user"
+    DELETE = "Delete a user"
+
+
+@router.post(__db.prefix(), tags=__db.tags, summary=__summary.CREATE)
+async def create(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
     user: UserCreate,
 ) -> Result:
-    return db_user.create(user, current_user)
+    return __db.user.create(user, current_user)
 
 
-@router.get("/user", tags=tags, summary="Get all the users")
-async def admin_read_users(
+@router.get(__db.prefix(), tags=__db.tags, summary=__summary.READ_ALL)
+async def read_all(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ]
 ) -> List[UserPublic]:
-    return db_user.read_all()
+    return __db.user.read_all()
 
 
-@router.get("/user/{user_id}", tags=tags, summary="Get the details of a user")
-async def admin_read_user(
+@router.get(__db.prefix(id=True), tags=__db.tags, summary=__summary.READ)
+async def read(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    user_id: str,
+    id: str,
 ) -> UserPublic:
-    return db_user.read(user_id)
+    return __db.user.read(id)
 
 
-@router.put("/user/{user_id}", tags=tags, summary="Update a user")
-async def admin_update_user(
+@router.put(__db.prefix(id=True), tags=__db.tags, summary=__summary.UPDATE)
+async def update(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=["admin", "user"]))
     ],
-    user_id: str,
+    id: str,
     user: UserUpdate,
 ) -> Result:
-    return db_user.update(user_id, user, current_user)
+    return __db.user.update(id, user, current_user)
 
 
-@router.delete("/user/{user_id}", tags=tags, summary="Delete a user")
-async def admin_delete_user(
+@router.delete(__db.prefix(id=True), tags=__db.tags, summary=__summary.DELETE)
+async def delete(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=["admin"]))
+        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ],
-    user_id: str,
+    id: str,
 ) -> Result:
-    return db_user.delete(user_id)
+    return __db.user.delete(id)
