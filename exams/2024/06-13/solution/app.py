@@ -18,7 +18,9 @@ from me import router as router_me
 
 app_name = "yatms"
 
+logging.getLogger("passlib").setLevel(logging.ERROR)
 logger = logging.getLogger(app_name.lower())
+
 app = FastAPI(title=app_name.upper(), debug=True)
 
 app.include_router(router_me)
