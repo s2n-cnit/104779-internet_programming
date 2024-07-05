@@ -7,6 +7,7 @@
  1. [11th March 2024](exams/2024/03-11-validation_test)
  2. [22nd May 2024 - Home-made Test](exams/2024/05-22)
  3. [13th June 2024](exams/2024/06-13)
+ 3. [05th July 2024](exams/2024/05-07)
 
 ## Lessons
 
