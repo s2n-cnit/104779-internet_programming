@@ -1,0 +1,445 @@
+from datetime import datetime
+from enum import Enum
+from typing import List, Optional, Self
+
+from error import ConflictException, EmptyException
+from pydantic import BaseModel
+from sqlalchemy import Column, Integer, String
+from sqlmodel import Field, Relationship, SQLModel, create_engine
+
+# Base
+
+
+class BasePublic(SQLModel):
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+    updated_at: Optional[datetime] = Field(
+        default_factory=datetime.now,
+        sa_column_kwargs={"onupdate": datetime.now},
+    )
+    created_by_id: Optional[str] = Field(foreign_key="user.id")
+    updated_by_id: Optional[str] | None = Field(foreign_key="user.id")
+
+
+# CommandTag
+
+
+class CommandTag(SQLModel, table=True):
+    id: int = Field(
+        sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
+    )
+    command_id: int = Field(foreign_key="command.id")
+    tag_id: int = Field(foreign_key="tag.id")
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+    created_by_id: Optional[str] = Field(foreign_key="user.id")
+    created_by: "User" = Relationship(
+        back_populates="command_tags_created",
+        sa_relationship_kwargs={
+            "primaryjoin": "CommandTag.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+
+
+# WorkflowCommand
+
+
+class WorkflowCommand(SQLModel, table=True):
+    id: int = Field(
+        sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
+    )
+    workflow_id: int = Field(foreign_key="workflow.id")
+    command_id: int = Field(foreign_key="command.id")
+    created_at: Optional[datetime] = Field(default_factory=datetime.now)
+    created_by_id: Optional[str] = Field(foreign_key="user.id")
+    created_by: "User" = Relationship(
+        back_populates="workflow_commands_created",
+        sa_relationship_kwargs={
+            "primaryjoin": "WorkflowCommand.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+
+
+# Workflow
+
+
+class WorkflowCreate(SQLModel):
+    name: str
+
+
+class WorkflowUpdate(SQLModel):
+    name: Optional[str] = None
+
+
+class WorkflowPublic(WorkflowCreate, BasePublic):
+    id: int = Field(
+        sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
+    )
+
+
+class Workflow(WorkflowPublic, table=True):
+    commands: List["Command"] = Relationship(
+        back_populates="workflow", link_model=WorkflowCommand
+    )
+    created_by: "User" = Relationship(
+        back_populates="workflows_created",
+        sa_relationship_kwargs={
+            "primaryjoin": "Workflow.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    updated_by: "User" = Relationship(
+        back_populates="workflows_updated",
+        sa_relationship_kwargs={
+            "primaryjoin": "Workflow.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+
+    def check_not_empty(self: Self) -> Self:
+        if len(self.command) == 0:
+            raise EmptyException(target="Workflow", id=self.id)
+        return self
+
+
+# Command
+
+
+class Status(Enum):
+    COMPLETED = "completed"
+    STARTED = "started"
+    TODO = "todo"
+
+
+class CommandCreate(SQLModel):
+    path: str
+    category_id: int = Field(foreign_key="category.id")
+
+
+class CommandUpdate(SQLModel):
+    path: Optional[str] = None
+    category_id: Optional[int] = Field(foreign_key="category.id", default=None)
+
+
+class CommandPublic(CommandCreate, BasePublic):
+    id: int = Field(
+        sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
+    )
+    started_at: Optional[datetime] = Field(default=None)
+    completed_at: Optional[datetime] = Field(default=None)
+
+
+class Command(CommandPublic, table=True):
+    workflow: "Workflow" = Relationship(
+        back_populates="commands", link_model=WorkflowCommand
+    )
+    tags: "Tag" = Relationship(
+        back_populates="commands", link_model=CommandTag
+    )
+    category: "Category" = Relationship(
+        back_populates="commands",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.category_id==Category.id",
+            "lazy": "joined",
+        },
+    )
+    created_by: "User" = Relationship(
+        back_populates="commands_created",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    updated_by: "User" = Relationship(
+        back_populates="commands_updated",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+
+
+# Role
+
+
+class RoleCreate(SQLModel):
+    id: str = Field(primary_key=True)
+    description: str | None = None
+
+
+class RoleUpdate(RoleCreate):
+    pass
+
+
+class RolePublic(RoleCreate, BasePublic):
+    pass
+
+
+class Role(RolePublic, table=True):
+    users: List["User"] = Relationship(
+        back_populates="role",
+        sa_relationship_kwargs={
+            "primaryjoin": "Role.id==User.role_id",
+            "lazy": "joined",
+        },
+    )
+    created_by: "User" = Relationship(
+        back_populates="roles_created",
+        sa_relationship_kwargs={
+            "primaryjoin": "Role.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    updated_by: "User" = Relationship(
+        back_populates="roles_updated",
+        sa_relationship_kwargs={
+            "primaryjoin": "Role.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+
+
+# User
+
+
+class UserCreate(SQLModel):
+    id: str = Field(primary_key=True)
+    first_name: str
+    last_name: str
+    email: str = Field(sa_column=Column("email", String, unique=True))
+    password: str
+    role_id: str = Field(foreign_key="role.id")
+    disabled: bool = False
+    bio: str | None = None
+    age: int | None = None
+
+
+class UserUpdate(UserCreate):
+    pass
+
+
+class UserPublic(BasePublic):
+    id: str = Field(primary_key=True)
+    first_name: str
+    last_name: str
+    email: str = Field(sa_column=Column("email", String, unique=True))
+    role_id: str = Field(foreign_key="role.id")
+    disabled: bool = False
+    bio: str | None = None
+    age: int | None = None
+
+
+class User(UserCreate, BasePublic, table=True):
+    tags_created: list["Tag"] = Relationship(
+        back_populates="created_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Tag.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    tags_updated: list["Tag"] = Relationship(
+        back_populates="updated_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Tag.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    command_tags_created: list["CommandTag"] = Relationship(
+        back_populates="created_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "CommandTag.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    workflow_commands_created: list["WorkflowCommand"] = Relationship(
+        back_populates="created_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "WorkflowCommand.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    categories_created: list["Category"] = Relationship(
+        back_populates="created_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Category.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    categories_updated: list["Category"] = Relationship(
+        back_populates="updated_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Category.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    workflows_created: list["Workflow"] = Relationship(
+        back_populates="created_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Workflow.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    workflows_updated: list["Workflow"] = Relationship(
+        back_populates="updated_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Workflow.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    commands_created: list["Command"] = Relationship(
+        back_populates="created_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    commands_updated: list["Command"] = Relationship(
+        back_populates="updated_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    role: Role = Relationship(
+        back_populates="users",
+        sa_relationship_kwargs={
+            "primaryjoin": "User.role_id==Role.id",
+            "lazy": "joined",
+        },
+    )
+    roles_created: list["Role"] = Relationship(
+        back_populates="created_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Role.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    roles_updated: list["Role"] = Relationship(
+        back_populates="updated_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Role.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+
+
+# Category
+
+
+class CategoryCreate(SQLModel):
+    name: str
+
+
+class CategoryUpdate(CategoryCreate):
+    pass
+
+
+class CategoryPublic(CategoryCreate, BasePublic):
+    id: int = Field(
+        sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
+    )
+
+
+class Category(CategoryPublic, table=True):
+    commands: list[Command] = Relationship(
+        back_populates="category",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.category_id==Category.id",
+            "lazy": "joined",
+        },
+    )
+    created_by: User = Relationship(
+        back_populates="categories_created",
+        sa_relationship_kwargs={
+            "primaryjoin": "Category.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    updated_by: User = Relationship(
+        back_populates="categories_updated",
+        sa_relationship_kwargs={
+            "primaryjoin": "Category.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+
+
+# Tag
+
+
+class TagCreate(SQLModel):
+    name: str
+
+
+class TagUpdate(TagCreate):
+    pass
+
+
+class TagPublic(TagCreate, BasePublic):
+    id: int = Field(
+        sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
+    )
+
+
+class Tag(TagPublic, table=True):
+    commands: List[Command] = Relationship(
+        back_populates="tags", link_model=CommandTag
+    )
+    created_by: User = Relationship(
+        back_populates="tags_created",
+        sa_relationship_kwargs={
+            "primaryjoin": "Tag.created_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    updated_by: User = Relationship(
+        back_populates="tags_updated",
+        sa_relationship_kwargs={
+            "primaryjoin": "Tag.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+
+
+# Result
+
+
+class Result(BaseModel):
+    action: str
+    target: str
+    id: str | int
+    success: bool
+    error: bool
+    # timestamp: datetime # FIXME not JSON serializable
+
+    def __init__(
+        self: Self,
+        target: str,
+        id: Optional[str | int],
+        action: str,
+        success: bool = True,
+    ) -> Self:
+        super().__init__(
+            action=action,
+            target=target,
+            id=id,
+            # timestamp=datetime.now(), # FIXME not JSON serializable
+            success=success,
+            error=not success,
+        )
+
+
+# Token
+
+
+class Token[Type: SQLModel](BaseModel):
+    access_token: str | None = None
+    refresh_token: str | None = None
+
+
+sqlite_file_name = "yawms.db"
+sqlite_url = f"sqlite:///{sqlite_file_name}"
+
+engine = create_engine(sqlite_url, echo=False)
+
+SQLModel.metadata.create_all(engine)

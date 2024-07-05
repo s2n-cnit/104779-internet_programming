@@ -1,0 +1,4 @@
+{
+    "paths": "test-command",
+    "category_id": {{ category_id }}
+}
