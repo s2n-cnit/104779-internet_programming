@@ -25,8 +25,23 @@ jobs:
       working-directory: ./exams/2024/07-05/solution
       run: |
         python -m pip install --upgrade pip
-        pip install pylint poetry
+        pip install poetry
+        poetry install --no-root
+
+    - name: Init data
+      working-directory: ./exams/2024/07-05/solution
+      run: poetry run python init_data.py
 
     - name: Run tests
       working-directory: ./exams/2024/07-05/solution
-      run: poetry run python -m unittest discover -s tests/ -p '*.py'
+      run: poetry run pytest --junit-xml=test-exam-2024_07_05-results.xml
+
+    - name: Surface failing tests
+      if: always()
+      uses: pmeier/pytest-results-action@main
+      with:
+         path: ./exams/2024/07-05/solution/test-exam-2024_07_05-results.xml
+         summary: true
+         display-options: fEX
+         fail-on-empty: true
+         title: Test Exam 2024/07/05 Results
