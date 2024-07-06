@@ -40,7 +40,7 @@ jobs:
       if: always()
       uses: pmeier/pytest-results-action@main
       with:
-         path: test-exam-2024_07_05-results.xml
+         path: ./exams/2024/07-05/solution/test-exam-2024_07_05-results.xml
          summary: true
          display-options: fEX
          fail-on-empty: true
