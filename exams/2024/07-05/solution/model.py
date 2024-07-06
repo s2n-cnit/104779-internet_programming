@@ -142,7 +142,7 @@ class Command(CommandPublic, table=True):
     workflow: "Workflow" = Relationship(
         back_populates="commands", link_model=WorkflowCommand
     )
-    tags: "Tag" = Relationship(
+    tags: List["Tag"] = Relationship(
         back_populates="commands", link_model=CommandTag
     )
     category: "Category" = Relationship(
