@@ -34,4 +34,14 @@ jobs:
 
     - name: Run tests
       working-directory: ./exams/2024/07-05/solution
-      run: poetry run pytest
+      run: poetry run pytest --junit-xml=test-exam-2024_07_05-results.xml
+
+    - name: Surface failing tests
+      if: always()
+      uses: pmeier/pytest-results-action@main
+      with:
+         path: test-exam-2024_07_05-results.xml
+         summary: true
+         display-options: fEX
+         fail-on-empty: true
+         title: Test Exam 2024/07/05 Results
