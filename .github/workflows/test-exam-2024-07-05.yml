@@ -5,6 +5,7 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,11 +16,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    
+
     - uses: actions/setup-python@v3
       with:
         python-version: "3.12"
-    
+
     - name: Install dependencies
       working-directory: ./exams/2024/07-05/solution
       run: |
