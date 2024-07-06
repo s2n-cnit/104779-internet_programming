@@ -2,7 +2,8 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Self
 
-from error import ConflictException, EmptyException
+from config import db_path, echo_engine
+from error import EmptyException
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 from sqlmodel import Field, Relationship, SQLModel, create_engine
@@ -437,9 +438,5 @@ class Token[Type: SQLModel](BaseModel):
     refresh_token: str | None = None
 
 
-sqlite_file_name = "yawms.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
-
-engine = create_engine(sqlite_url, echo=False)
-
+engine = create_engine(f"sqlite:///{db_path}", echo=echo_engine)
 SQLModel.metadata.create_all(engine)

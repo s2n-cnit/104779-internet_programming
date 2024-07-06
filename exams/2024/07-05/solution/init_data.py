@@ -3,8 +3,13 @@
 # db_filepath = "yalb.db"
 # if os.path.exists(db_filepath):
 #     os.remove(db_filepath)
-
+import os
 from datetime import datetime  # noqa: E402
+
+from config import db_path
+
+if os.path.exists(db_path):
+    os.remove(db_path)
 
 from model import Role, User, engine  # noqa: E402
 from passlib.context import CryptContext  # noqa: E402

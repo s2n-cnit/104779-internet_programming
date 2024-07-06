@@ -1,12 +1,15 @@
 import json
 import os
+import sys
 from typing import Self
 
 import pytest
-import requests
-from config import base_url
+from app import app
 from fastapi import status
+from fastapi.testclient import TestClient
 from jinja2 import Template
+
+client = TestClient(app)
 
 field_check = dict(tag="name", category="name", command="path")
 
@@ -39,7 +42,7 @@ class TestAPI:
             return pytest.data[self.username][self.target]
 
     def get_url(self: Self, end: str = "") -> str:
-        return f"{base_url}/{self.role}/{self.target}{end}"
+        return f"/{self.role}/{self.target}{end}"
 
     def is_action_ok(self: Self) -> bool:
         return ("-NF" not in self.action and "-NC" not in self.action and
@@ -68,10 +71,12 @@ class TestAPI:
                 assert found
 
     def check_result(self: Self, output: str) -> None:
+        print(self.is_action_ok())
         if self.is_action_ok():
             _data = self.response.json()
             assert _data["action"] == output
             pytest.data[self.username][self.target] = _data["id"]
+            print(pytest.data)
 
     def make_response(
         self: Self,
@@ -120,7 +125,7 @@ class TestAPI:
             params = {}
         self.init(locals())
         _url = self.get_url()
-        if self.make_response(requests.post,
+        if self.make_response(client.post,
                               url=_url,
                               with_data=True,
                               params=params):
@@ -145,7 +150,7 @@ class TestAPI:
     ) -> None:
         self.init(locals())
         _url = self.get_url(end=f"/{self.get_id()}")
-        if self.make_response(requests.get, url=_url, with_data=False):
+        if self.make_response(client.get, url=_url, with_data=False):
             self.check_data(single=True)
 
     @pytest.mark.parametrize(
@@ -173,7 +178,7 @@ class TestAPI:
             status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
         self.init(locals())
         _url = self.get_url(end=self.part)
-        if self.make_response(requests.get, url=_url, with_data=False):
+        if self.make_response(client.get, url=_url, with_data=False):
             self.check_data(single=False)
 
     @pytest.mark.parametrize(
@@ -204,7 +209,7 @@ class TestAPI:
             params = {}
         self.init(locals())
         _url = self.get_url(end=f"/{self.get_id()}")
-        if self.make_response(requests.put,
+        if self.make_response(client.put,
                               url=_url,
                               with_data=True,
                               params=params):
@@ -231,5 +236,5 @@ class TestAPI:
             status_code = status.HTTP_405_METHOD_NOT_ALLOWED
         self.init(locals())
         _url = self.get_url(end=f"/{self.get_id()}")
-        if self.make_response(requests.delete, url=_url, with_data=False):
+        if self.make_response(client.delete, url=_url, with_data=False):
             self.check_result("Deleted")

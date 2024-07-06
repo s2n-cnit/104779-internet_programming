@@ -1,5 +1,3 @@
-import logging
-
 import admin.category  # noqa: F401
 import admin.command  # noqa: F401
 import admin.command_tag  # noqa: F401
@@ -16,16 +14,12 @@ import me.workflow  # noqa: F401
 import me.workflow_command  # noqa: F401
 from admin import router as router_admin
 from auth import router as router_auth
+from config import app_name, debug, logger  # noqa: F401
 from error import ConflictException, NotFoundException, exception_handler
 from fastapi import FastAPI
 from me import router as router_me
 
-app_name = "yatms"
-
-logging.getLogger("passlib").setLevel(logging.ERROR)
-logger = logging.getLogger(app_name.lower())
-
-app = FastAPI(title=app_name.upper(), debug=True)
+app = FastAPI(title=app_name, debug=debug)
 
 app.include_router(router_me)
 app.include_router(router_admin)
