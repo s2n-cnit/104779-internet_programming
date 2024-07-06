@@ -71,7 +71,6 @@ class TestAPI:
                 assert found
 
     def check_result(self: Self, output: str) -> None:
-        print(self.is_action_ok())
         if self.is_action_ok():
             _data = self.response.json()
             assert _data["action"] == output
