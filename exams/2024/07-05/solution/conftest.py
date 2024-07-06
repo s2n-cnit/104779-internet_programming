@@ -19,9 +19,11 @@ def pytest_configure():
 def auth_request(username: str, password: str):
     response = client.post("/auth/token",
                            data=dict(username=username, password=password))
-    return Struct(
-        **project(response.json(), ["access_token", "refresh_token"]))
-
+    _tokens = ["access_token", "refresh_token"]
+    _json = response.json()
+    for token in _tokens:
+        assert token in _json
+    return Struct(**project(_json, _tokens))
 
 @pytest.fixture()
 def auth_header(auth_request):

@@ -19,14 +19,14 @@ field_check = dict(tag="name", category="name", command="path")
 )
 @pytest.mark.parametrize("role", ["admin", "me"])
 @pytest.mark.parametrize("target", ["category", "tag", "workflow", "command"])
-class TestAPI:
+class TestAPP:
 
     def init(self: Self, kwrd_args: dict) -> None:
         for k, v in kwrd_args.items():
             self.__setattr__(k, v)
 
     def has_path(self: Self) -> bool:
-        self.path = f"test/data/{self.target}/{self.action}.json"
+        self.path = f"test_data/{self.target}/{self.action}.json"
         return os.path.exists(self.path)
 
     def get_data(self: Self, **params: dict) -> dict:
@@ -75,7 +75,6 @@ class TestAPI:
             _data = self.response.json()
             assert _data["action"] == output
             pytest.data[self.username][self.target] = _data["id"]
-            print(pytest.data)
 
     def make_response(
         self: Self,
