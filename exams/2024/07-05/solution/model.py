@@ -1,7 +1,6 @@
 from datetime import datetime
 from enum import Enum
 from random import randrange, seed
-from threading import Thread
 from time import sleep
 from typing import List, Optional, Self
 
@@ -10,6 +9,7 @@ from error import ConflictException, EmptyException
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 from sqlmodel import Field, Relationship, SQLModel, create_engine
+from utils import threaded
 
 # Base
 
@@ -175,8 +175,7 @@ class Command(CommandPublic, table=True):
         self.stopped_at = None
         self.status = CommandStatus.STARTED
         logger.info(f"Command {self.path} started")
-        self._t = Thread(target=self._execute)
-        self._t.start()
+        return self._execute()
 
     def stop(self: Self) -> None:
         self.completed_at = datetime.now()
@@ -186,6 +185,7 @@ class Command(CommandPublic, table=True):
         self.status = CommandStatus.STOPPED
         logger.info(f"Command {self.path} stopped")
 
+    @threaded
     def _execute(self: Self) -> None:
         _t = randrange(10) * 1000
         for i in range(_t, 0, -1):

@@ -33,6 +33,7 @@ class TestAPP:
 
     def get_data(self: Self, **params: dict) -> dict:
         _buffer = open(self.path).read()
+        print(params)
         _tpl = Template(_buffer)
         _txt = _tpl.render(**params)
         return json.loads(_txt)
@@ -47,11 +48,8 @@ class TestAPP:
         return f"/{self.role}/{self.target}{end}"
 
     def is_action_ok(self: Self) -> bool:
-        return (
-            "-NF" not in self.action
-            and "-NC" not in self.action
-            and self.status_code == status.HTTP_200_OK
-        )
+        return ("-NF" not in self.action and "-NC" not in self.action and
+                self.status_code == status.HTTP_200_OK)
 
     def check_auth(self: Self) -> bool:
         if self.role == "admin" and self.username != "admin":
@@ -129,13 +127,21 @@ class TestAPP:
         if target == "command":
             assert "category" in pytest.data[username]
             params = dict(category_id=pytest.data[username]["category"])
+        elif target == "workflow-command":
+            assert "workflow" in pytest.data[username]
+            assert "command" in pytest.data[username]
+            params = dict(
+                workflow_id=pytest.data[username]["workflow"],
+                command_id=pytest.data[username]["command"],
+            )
         else:
             params = {}
         self.init(locals())
         _url = self.get_url()
-        if self.make_response(
-            client.post, url=_url, with_data=True, params=params
-        ):
+        if self.make_response(client.post,
+                              url=_url,
+                              with_data=True,
+                              params=params):
             self.check_result("Created")
 
     @pytest.mark.parametrize(
@@ -215,9 +221,10 @@ class TestAPP:
             params = {}
         self.init(locals())
         _url = self.get_url(end=f"/{self.get_id()}")
-        if self.make_response(
-            client.put, url=_url, with_data=True, params=params
-        ):
+        if self.make_response(client.put,
+                              url=_url,
+                              with_data=True,
+                              params=params):
             self.check_result("Updated")
 
     @pytest.mark.parametrize(
@@ -244,13 +251,6 @@ class TestAPP:
         if self.make_response(client.delete, url=_url, with_data=False):
             self.check_result("Deleted")
 
-
-@pytest.mark.parametrize(
-    "username,password", [("admin", "admin"), ("alexcarrega", "test-me")]
-)
-@pytest.mark.parametrize("role", ["admin", "me"])
-class TestWorkflow(TestAPP):
-
     @pytest.mark.parametrize(
         "execution,action,status_code",
         [
@@ -258,20 +258,21 @@ class TestWorkflow(TestAPP):
             ("stop", Action.STOPPED, status.HTTP_200_OK),
         ],
     )
-    def test_execution_ok(
+    @pytest.mark.order(6)
+    def test_execution(
         self: Self,
         username: str,
         auth_header: dict,  # noqa: F811
         role: str,
-        execution,
+        target: str,
+        execution: str,
         action: str,
         status_code: int,
     ) -> None:
-        self.init({**locals(), **dict(target="workflow")})
+        self.init(**locals())
         _id = pytest.data[self.username][self.target]
-        _response = client.put(
-            f"/workflow/{_id}/{execution}", headers=auth_header
-        )
+        _response = client.put(f"/workflow/{_id}/{execution}",
+                               headers=auth_header)
         if self.check_auth():
             assert self.response.status_code == self.status_code
             assert self.response.headers["Content-Type"] == "application/json"

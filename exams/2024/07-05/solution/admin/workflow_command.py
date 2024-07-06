@@ -34,8 +34,8 @@ async def create(
     ],
     workflow_command: WorkflowCommand,
 ) -> Result:
-    __db.workflow.read(workflow_command.command_id)
-    __db.command.read(workflow_command.tag_id)
+    __db.workflow.read(workflow_command.workflow_id)
+    __db.command.read(workflow_command.command_id)
     return __db.workflow_command.create(workflow_command, current_user)
 
 

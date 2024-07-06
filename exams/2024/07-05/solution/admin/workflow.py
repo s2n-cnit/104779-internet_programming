@@ -1,4 +1,5 @@
 from enum import Enum
+from threading import Thread
 from typing import Annotated, List
 
 from auth import RoleChecker
@@ -6,6 +7,7 @@ from db import DB, Action
 from fastapi import Depends
 from model import (Command, Result, User, Workflow, WorkflowCreate,
                    WorkflowPublic, WorkflowUpdate)
+from utils import threaded
 
 from . import router
 
@@ -91,9 +93,10 @@ async def delete(
 async def start(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
-    ]
+    ],
+    id: int,
 ) -> Result:
-    return _execute(Action.STARTED, current_user)
+    return _execute(id, Action.STARTED, current_user)
 
 
 @router.put(
@@ -102,22 +105,35 @@ async def start(
 async def stop(
     current_user: Annotated[
         User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
-    ]
+    ],
+    id: int,
 ) -> Result:
-    return _execute(Action.STOPPED, current_user)
+    return _execute(id, Action.STOPPED, current_user)
 
 
-def _execute(action: Action, current_user: User):
+def _execute(id: str, action: Action, current_user: User):
     workflow = __db.workflow.read(id).check_not_empty()
     for command in workflow.commands:
         match action:
             case Action.STARTED:
-                command.start()
+                _t = command.start()
+                _waiting_execution(_t, command, current_user)
             case Action.STOPPED:
                 command.stop()
-        __db.command.update(id, command, current_user)
+        __db.command.update(command.id, command, current_user)
     return Result(
         action=action,
         target=workflow.model_text,
         id=workflow.id,
     )
+
+
+@threaded
+def _waiting_execution(
+    thread: Thread, command: Command, current_user: User
+) -> None:
+    if thread.is_alive():
+        thread.join()
+        __db.command.update(command.id, command, current_user)
+
+# FIXME avoid repeating code in me and admin
