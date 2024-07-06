@@ -13,6 +13,7 @@ from . import router
 class __db:
     tags = ["Me - Workflow"]
     workflow = DB[Workflow](Workflow, "Workflow")
+    command = DB[Command](Command, "Command")
     allowed_roles_ids = ["admin", "user"]
 
     def prefix(
@@ -112,15 +113,7 @@ async def start(
         User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ]
 ) -> Result:
-    workflow = __db.workflow.read_personal(
-        id, current_user.workflows_created
-    ).check_not_empty()
-    map(Command.start, workflow.commands)
-    return Result(
-        action=Action.STARTED,
-        target=workflow.model_text,
-        id=workflow.id,
-    )
+    return _execute(Action.STARTED, current_user)
 
 
 @router.put(
@@ -131,12 +124,22 @@ async def stop(
         User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ]
 ) -> Result:
+    return _execute(Action.STOPPED, current_user)
+
+
+def _execute(action: Action, current_user: User):
     workflow = __db.workflow.read_personal(
         id, current_user.workflows_created
     ).check_not_empty()
-    map(Command.stop, workflow.commands)
+    for command in workflow.commands:
+        match action:
+            case Action.STARTED:
+                command.start()
+            case Action.STOPPED:
+                command.stop()
+        __db.command.update(id, command, current_user)
     return Result(
-        action=Action.STOPPED,
+        action=action,
         target=workflow.model_text,
         id=workflow.id,
     )

@@ -1,0 +1,4 @@
+{
+    "workflow-id": 0,
+    "command-id": {{ command_id }}
+}

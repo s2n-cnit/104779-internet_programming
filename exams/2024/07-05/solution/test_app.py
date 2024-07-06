@@ -1,10 +1,10 @@
 import json
 import os
-import sys
 from typing import Self
 
 import pytest
 from app import app
+from db import Action
 from fastapi import status
 from fastapi.testclient import TestClient
 from jinja2 import Template
@@ -18,7 +18,9 @@ field_check = dict(tag="name", category="name", command="path")
     "username,password", [("admin", "admin"), ("alexcarrega", "test-me")]
 )
 @pytest.mark.parametrize("role", ["admin", "me"])
-@pytest.mark.parametrize("target", ["category", "tag", "workflow", "command"])
+@pytest.mark.parametrize(
+    "target", ["category", "tag", "workflow", "command", "workflow-command"]
+)
 class TestAPP:
 
     def init(self: Self, kwrd_args: dict) -> None:
@@ -45,8 +47,11 @@ class TestAPP:
         return f"/{self.role}/{self.target}{end}"
 
     def is_action_ok(self: Self) -> bool:
-        return ("-NF" not in self.action and "-NC" not in self.action and
-                self.status_code == status.HTTP_200_OK)
+        return (
+            "-NF" not in self.action
+            and "-NC" not in self.action
+            and self.status_code == status.HTTP_200_OK
+        )
 
     def check_auth(self: Self) -> bool:
         if self.role == "admin" and self.username != "admin":
@@ -104,6 +109,11 @@ class TestAPP:
             ("create-NC", status.HTTP_422_UNPROCESSABLE_ENTITY),
             ("create-NC-category-NF", status.HTTP_422_UNPROCESSABLE_ENTITY),
             ("create-category-NF", status.HTTP_404_NOT_FOUND),
+            ("create-command-NF", status.HTTP_404_NOT_FOUND),
+            ("create-NC-command-NF", status.HTTP_422_UNPROCESSABLE_ENTITY),
+            ("create-command-NF", status.HTTP_404_NOT_FOUND),
+            ("create-workflow-command-NF", status.HTTP_404_NOT_FOUND),
+            ("create-NC-workflow-NF", status.HTTP_422_UNPROCESSABLE_ENTITY),
         ],
     )
     @pytest.mark.order(1)
@@ -123,10 +133,9 @@ class TestAPP:
             params = {}
         self.init(locals())
         _url = self.get_url()
-        if self.make_response(client.post,
-                              url=_url,
-                              with_data=True,
-                              params=params):
+        if self.make_response(
+            client.post, url=_url, with_data=True, params=params
+        ):
             self.check_result("Created")
 
     @pytest.mark.parametrize(
@@ -187,7 +196,6 @@ class TestAPP:
             ("update-NF", status.HTTP_404_NOT_FOUND),
             ("update-NC", status.HTTP_422_UNPROCESSABLE_ENTITY),
             ("update-NC-NF", status.HTTP_422_UNPROCESSABLE_ENTITY),
-            ("update-NC-category-NF", status.HTTP_404_NOT_FOUND),
         ],
     )
     @pytest.mark.order(3)
@@ -207,10 +215,9 @@ class TestAPP:
             params = {}
         self.init(locals())
         _url = self.get_url(end=f"/{self.get_id()}")
-        if self.make_response(client.put,
-                              url=_url,
-                              with_data=True,
-                              params=params):
+        if self.make_response(
+            client.put, url=_url, with_data=True, params=params
+        ):
             self.check_result("Updated")
 
     @pytest.mark.parametrize(
@@ -236,3 +243,38 @@ class TestAPP:
         _url = self.get_url(end=f"/{self.get_id()}")
         if self.make_response(client.delete, url=_url, with_data=False):
             self.check_result("Deleted")
+
+
+@pytest.mark.parametrize(
+    "username,password", [("admin", "admin"), ("alexcarrega", "test-me")]
+)
+@pytest.mark.parametrize("role", ["admin", "me"])
+class TestWorkflow(TestAPP):
+
+    @pytest.mark.parametrize(
+        "execution,action,status_code",
+        [
+            ("start", Action.STARTED, status.HTTP_200_OK),
+            ("stop", Action.STOPPED, status.HTTP_200_OK),
+        ],
+    )
+    def test_execution_ok(
+        self: Self,
+        username: str,
+        auth_header: dict,  # noqa: F811
+        role: str,
+        execution,
+        action: str,
+        status_code: int,
+    ) -> None:
+        self.init({**locals(), **dict(target="workflow")})
+        _id = pytest.data[self.username][self.target]
+        _response = client.put(
+            f"/workflow/{_id}/{execution}", headers=auth_header
+        )
+        if self.check_auth():
+            assert self.response.status_code == self.status_code
+            assert self.response.headers["Content-Type"] == "application/json"
+            _json = _response.json()
+            assert "action" in _json
+            assert _json["action"] == self.action

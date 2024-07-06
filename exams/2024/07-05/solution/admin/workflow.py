@@ -4,15 +4,8 @@ from typing import Annotated, List
 from auth import RoleChecker
 from db import DB, Action
 from fastapi import Depends
-from model import (
-    Command,
-    Result,
-    User,
-    Workflow,
-    WorkflowCreate,
-    WorkflowPublic,
-    WorkflowUpdate,
-)
+from model import (Command, Result, User, Workflow, WorkflowCreate,
+                   WorkflowPublic, WorkflowUpdate)
 
 from . import router
 
@@ -20,6 +13,7 @@ from . import router
 class __db:
     tags = ["Admin - Workflow"]
     workflow = DB[Workflow](Workflow, "Workflow")
+    command = DB[Command](Command, "Command")
     allowed_roles_ids = ["admin"]
 
     def prefix(id: bool = False, start: bool = False, stop: bool = False):
@@ -99,13 +93,7 @@ async def start(
         User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ]
 ) -> Result:
-    workflow = __db.workflow.read(id).check_not_empty()
-    map(Command.start, workflow.commands)
-    return Result(
-        action=Action.STARTED,
-        target=workflow.model_text,
-        id=workflow.id,
-    )
+    return _execute(Action.STARTED, current_user)
 
 
 @router.put(
@@ -116,10 +104,20 @@ async def stop(
         User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
     ]
 ) -> Result:
+    return _execute(Action.STOPPED, current_user)
+
+
+def _execute(action: Action, current_user: User):
     workflow = __db.workflow.read(id).check_not_empty()
-    map(Command.stop, workflow.commands)
+    for command in workflow.commands:
+        match action:
+            case Action.STARTED:
+                command.start()
+            case Action.STOPPED:
+                command.stop()
+        __db.command.update(id, command, current_user)
     return Result(
-        action=Action.STOPPED,
+        action=action,
         target=workflow.model_text,
         id=workflow.id,
     )

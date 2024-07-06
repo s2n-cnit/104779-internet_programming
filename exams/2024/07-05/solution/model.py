@@ -1,14 +1,19 @@
 from datetime import datetime
 from enum import Enum
+from random import randrange, seed
+from threading import Thread
+from time import sleep
 from typing import List, Optional, Self
 
-from config import db_path, echo_engine
-from error import EmptyException
+from config import db_path, echo_engine, logger
+from error import ConflictException, EmptyException
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 from sqlmodel import Field, Relationship, SQLModel, create_engine
 
 # Base
+
+seed()
 
 
 class BasePublic(SQLModel):
@@ -69,7 +74,7 @@ class WorkflowCreate(SQLModel):
 
 
 class WorkflowUpdate(SQLModel):
-    name: Optional[str] = None
+    name: str
 
 
 class WorkflowPublic(WorkflowCreate, BasePublic):
@@ -106,10 +111,11 @@ class Workflow(WorkflowPublic, table=True):
 # Command
 
 
-class Status(Enum):
+class CommandStatus(Enum):
     COMPLETED = "completed"
     STARTED = "started"
-    TODO = "todo"
+    STOPPED = "stopped"
+    NOT_EXECUTED = "not-executed"
 
 
 class CommandCreate(SQLModel):
@@ -128,6 +134,8 @@ class CommandPublic(CommandCreate, BasePublic):
     )
     started_at: Optional[datetime] = Field(default=None)
     completed_at: Optional[datetime] = Field(default=None)
+    stopped_at: Optional[datetime] = Field(default=None)
+    status: CommandStatus = Field(default=CommandStatus.NOT_EXECUTED)
 
 
 class Command(CommandPublic, table=True):
@@ -159,6 +167,34 @@ class Command(CommandPublic, table=True):
         },
     )
 
+    def start(self: Self) -> None:
+        if self.status == CommandStatus.STARTED:
+            raise ConflictException(target="Command", id=self.id)
+        self.started_at = datetime.now()
+        self.completed_at = None
+        self.stopped_at = None
+        self.status = CommandStatus.STARTED
+        logger.info(f"Command {self.path} started")
+        self._t = Thread(target=self._execute)
+        self._t.start()
+
+    def stop(self: Self) -> None:
+        self.completed_at = datetime.now()
+        if self.status in [CommandStatus.STOPPED, CommandStatus.NOT_EXECUTED]:
+            raise ConflictException(target="Command", id=self.id)
+        self.stopped_at = datetime.now()
+        self.status = CommandStatus.STOPPED
+        logger.info(f"Command {self.path} stopped")
+
+    def _execute(self: Self) -> None:
+        _t = randrange(10) * 1000
+        for i in range(_t, 0, -1):
+            if self.stopped_at is not None:
+                return None
+            logger.info(f"Command {self.path} in execution... (-{i}) seconds")
+            sleep(i * 1000)
+        self.completed_at = datetime.now()
+        self.status = CommandStatus.COMPLETED
 
 # Role
 
