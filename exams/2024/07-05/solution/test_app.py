@@ -18,9 +18,7 @@ field_check = dict(tag="name", category="name", command="path")
     "username,password", [("admin", "admin"), ("alexcarrega", "test-me")]
 )
 @pytest.mark.parametrize("role", ["admin", "me"])
-@pytest.mark.parametrize(
-    "target", ["category", "tag", "workflow", "command", "workflow-command"]
-)
+@pytest.mark.parametrize("target", ["category", "tag", "workflow", "command"])
 class TestAPP:
 
     def init(self: Self, kwrd_args: dict) -> None:
@@ -108,13 +106,15 @@ class TestAPP:
         [
             ("create", status.HTTP_200_OK),
             ("create-NC", status.HTTP_422_UNPROCESSABLE_ENTITY),
-            ("create-NC-category-NF", status.HTTP_422_UNPROCESSABLE_ENTITY),
+            ("create-workflow-NF", status.HTTP_404_NOT_FOUND),
             ("create-category-NF", status.HTTP_404_NOT_FOUND),
-            ("create-command-NF", status.HTTP_404_NOT_FOUND),
-            ("create-NC-command-NF", status.HTTP_422_UNPROCESSABLE_ENTITY),
-            ("create-command-NF", status.HTTP_404_NOT_FOUND),
-            ("create-workflow-command-NF", status.HTTP_404_NOT_FOUND),
+            ("create-workflow-category-NF", status.HTTP_404_NOT_FOUND),
+            ("create-NC-category-NF", status.HTTP_422_UNPROCESSABLE_ENTITY),
             ("create-NC-workflow-NF", status.HTTP_422_UNPROCESSABLE_ENTITY),
+            (
+                "create-NC-workflow-category-NF",
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
+            ),
         ],
     )
     @pytest.mark.order(1)
@@ -201,6 +201,7 @@ class TestAPP:
         [
             ("update", status.HTTP_200_OK),
             ("update-category-NF", status.HTTP_404_NOT_FOUND),
+            ("update-workflow-NF", status.HTTP_404_NOT_FOUND),
             ("update-NF", status.HTTP_404_NOT_FOUND),
             ("update-NC", status.HTTP_422_UNPROCESSABLE_ENTITY),
             ("update-NC-NF", status.HTTP_422_UNPROCESSABLE_ENTITY),
@@ -217,8 +218,12 @@ class TestAPP:
         status_code: int,
     ) -> None:
         if target == "command":
+            assert "workflow" in pytest.data[username]
             assert "category" in pytest.data[username]
-            params = dict(category_id=pytest.data[username]["category"])
+            params = dict(
+                workflow_id=pytest.data[username]["workflow"],
+                category_id=pytest.data[username]["category"],
+            )
         else:
             params = {}
         self.init(locals())

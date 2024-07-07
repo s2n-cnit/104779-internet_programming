@@ -1,0 +1,5 @@
+{
+    "path": "test-category",
+    "category_id": {{ category_id }},
+    "workflow_id": 0
+}

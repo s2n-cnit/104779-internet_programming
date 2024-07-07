@@ -1,4 +1,5 @@
 {
     "path": "new-test-command",
-    "category_id": {{ category_id }}
+    "category_id": {{ category_id }},
+    "workflow_id": {{ workflow_id }}
 }

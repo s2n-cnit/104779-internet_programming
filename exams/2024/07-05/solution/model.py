@@ -46,26 +46,6 @@ class CommandTag(SQLModel, table=True):
     )
 
 
-# WorkflowCommand
-
-
-class WorkflowCommand(SQLModel, table=True):
-    id: int = Field(
-        sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
-    )
-    workflow_id: int = Field(foreign_key="workflow.id")
-    command_id: int = Field(foreign_key="command.id")
-    created_at: Optional[datetime] = Field(default_factory=datetime.now)
-    created_by_id: Optional[str] = Field(foreign_key="user.id")
-    created_by: "User" = Relationship(
-        back_populates="workflow_commands_created",
-        sa_relationship_kwargs={
-            "primaryjoin": "WorkflowCommand.created_by_id==User.id",
-            "lazy": "joined",
-        },
-    )
-
-
 # Workflow
 
 
@@ -84,8 +64,12 @@ class WorkflowPublic(WorkflowCreate, BasePublic):
 
 
 class Workflow(WorkflowPublic, table=True):
-    commands: List["Command"] = Relationship(
-        back_populates="workflow", link_model=WorkflowCommand
+    commands: list["Command"] = Relationship(
+        back_populates="category",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.workflow_id==Workflow.id",
+            "lazy": "joined",
+        },
     )
     created_by: "User" = Relationship(
         back_populates="workflows_created",
@@ -121,11 +105,13 @@ class CommandStatus(Enum):
 class CommandCreate(SQLModel):
     path: str
     category_id: int = Field(foreign_key="category.id")
+    workflow_id: int = Field(foreign_key="workflow.id")
 
 
 class CommandUpdate(SQLModel):
     path: Optional[str] = None
     category_id: Optional[int] = Field(foreign_key="category.id", default=None)
+    workflow_id: Optional[int] = Field(foreign_key="workflow.id", default=None)
 
 
 class CommandPublic(CommandCreate, BasePublic):
@@ -141,9 +127,6 @@ class CommandPublic(CommandCreate, BasePublic):
 
 
 class Command(CommandPublic, table=True):
-    workflow: "Workflow" = Relationship(
-        back_populates="commands", link_model=WorkflowCommand
-    )
     tags: List["Tag"] = Relationship(
         back_populates="commands", link_model=CommandTag
     )
@@ -151,6 +134,13 @@ class Command(CommandPublic, table=True):
         back_populates="commands",
         sa_relationship_kwargs={
             "primaryjoin": "Command.category_id==Category.id",
+            "lazy": "joined",
+        },
+    )
+    workflow: "Workflow" = Relationship(
+        back_populates="commands",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.workflow_id==Workflow.id",
             "lazy": "joined",
         },
     )

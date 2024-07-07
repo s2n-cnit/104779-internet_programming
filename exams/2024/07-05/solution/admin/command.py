@@ -4,15 +4,8 @@ from typing import Annotated, List
 from auth import RoleChecker
 from db import DB
 from fastapi import Depends
-from model import (
-    Category,
-    Command,
-    CommandCreate,
-    CommandPublic,
-    CommandUpdate,
-    Result,
-    User,
-)
+from model import (Category, Command, CommandCreate, CommandPublic,
+                   CommandUpdate, Result, User, Workflow)
 
 from . import router
 
@@ -20,6 +13,7 @@ from . import router
 class __db:
     tags = ["Admin - Command"]
     command = DB[Command](Command, "Command")
+    workflow = DB[Workflow](Workflow, "Workflow")
     category = DB[Category](Category, "Category")
     allowed_roles_ids = ["admin"]
 
@@ -38,10 +32,11 @@ class __summary(str, Enum):
 @router.post(__db.prefix(), tags=__db.tags, summary=__summary.CREATE)
 async def create(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
-    ],
+        User,
+        Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))],
     command: CommandCreate,
 ) -> Result:
+    __db.workflow.read(command.workflow_id)
     __db.category.read(command.category_id)
     return __db.command.create(command, current_user)
 
@@ -68,19 +63,23 @@ async def read(
 @router.put(__db.prefix(id=True), tags=__db.tags, summary=__summary.DELETE)
 async def update(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
-    ],
+        User,
+        Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))],
     id: int,
     command: CommandUpdate,
 ) -> Result:
+    if command.workflow_id is not None:
+        __db.workflow.read(command.workflow_id)
+    if command.category_id is not None:
+        __db.category.read(command.category_id)
     return __db.command.update(id, command, current_user)
 
 
 @router.delete(__db.prefix(id=True), tags=__db.tags, summary=__summary.DELETE)
 async def delete(
     current_user: Annotated[
-        User, Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))
-    ],
+        User,
+        Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))],
     id: int,
 ) -> Result:
     return __db.command.delete(id)
