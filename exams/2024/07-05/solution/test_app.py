@@ -316,7 +316,7 @@ class TestAPP:
         status_code: int,
     ) -> None:
         if target == "command":
-            self.init(**locals())
+            self.init(locals())
             match goal:
                 case CommandTagGoal.OK:
                     _id = pytest.data[self.username][self.target]
@@ -359,7 +359,7 @@ class TestAPP:
         status_code: int,
     ) -> None:
         if target == "workflow":
-            self.init(**locals())
+            self.init(locals())
             _id = pytest.data[self.username][self.target]
             _response = client.put(f"/workflow/{_id}/{execution}",
                                    headers=auth_header)
