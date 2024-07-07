@@ -14,8 +14,6 @@ client = TestClient(app)
 
 field_check = dict(tag="name", category="name", command="path")
 
-# FIXME check if get only created by me (not for admin)
-
 
 class CommandTagAction(str, Enum):
     ADD_TAG = "add-tag"
@@ -77,6 +75,9 @@ class TestAPP:
             if single:
                 assert type(_data) is dict
                 assert field_check[self.target] in _data
+                if self.role != "admin":
+                    assert _data["created_by_id"] == self.username
+                    assert _data["updated_by_id"] in [self.username, None]
             else:
                 assert type(_data) is list
                 assert len(_data) > 0
@@ -86,6 +87,10 @@ class TestAPP:
                         found = True
                         break
                 assert found
+                if self.role != "admin":
+                    for _itm in _data:
+                        assert _itm["created_by_id"] == self.username
+                        assert _itm["updated_by_id"] in [self.username, None]
 
     def check_result(self: Self, output: str) -> None:
         if self.is_action_ok():
