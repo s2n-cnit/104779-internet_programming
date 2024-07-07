@@ -327,6 +327,9 @@ class TestAPP:
                 case CommandTagGoal.COMMAND_TAG_NOT_FOUND:
                     _id = pytest.data[self.username][self.target]
                     _tag_id = pytest.data[self.username]["tag"]
+                case CommandTagGoal.COMMAND_TAG_FOUND:
+                    _id = pytest.data[self.username][self.target]
+                    _tag_id = pytest.data[self.username]["tag"]
             _response = client.put(f"/command/{_id}/{action}/{_tag_id}",
                                    headers=auth_header)
             if self.check_auth():
