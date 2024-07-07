@@ -150,7 +150,7 @@ class TestAPP:
             assert "workflow" in pytest.data[username]
             params = dict(
                 workflow_id=pytest.data[username]["workflow"],
-                command_id=pytest.data[username]["command"],
+                category_id=pytest.data[username]["category"],
             )
         else:
             params = {}
