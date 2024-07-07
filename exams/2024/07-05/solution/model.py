@@ -319,13 +319,6 @@ class User(UserCreate, BasePublic, table=True):
             "lazy": "joined",
         },
     )
-    role: Role = Relationship(
-        back_populates="users",
-        sa_relationship_kwargs={
-            "primaryjoin": "User.role_id==Role.id",
-            "lazy": "joined",
-        },
-    )
 
 
 # Category
