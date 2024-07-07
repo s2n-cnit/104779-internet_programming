@@ -130,4 +130,5 @@ async def rm_tag(
         User,
         Depends(RoleChecker(allowed_role_ids=__db.allowed_roles_ids))],
     id: int,
+
     _db.command_tag.delete(command_tag.id)
