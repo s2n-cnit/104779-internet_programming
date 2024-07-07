@@ -147,10 +147,7 @@ class TestAPP:
     ) -> None:
         if target == "command":
             assert "category" in pytest.data[username]
-            params = dict(category_id=pytest.data[username]["category"])
-        elif target == "workflow-command":
             assert "workflow" in pytest.data[username]
-            assert "command" in pytest.data[username]
             params = dict(
                 workflow_id=pytest.data[username]["workflow"],
                 command_id=pytest.data[username]["command"],
