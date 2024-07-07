@@ -1,5 +1,4 @@
-name: Test Exam 2024-07-05
-
+name: pytest
 on:
   # push:
   #   branches: [ "master" ]
