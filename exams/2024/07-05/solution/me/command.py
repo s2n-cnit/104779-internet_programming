@@ -128,7 +128,7 @@ async def update(
 
 
 @router.put(
-    __db.prefix(id=True, tag=True), tags=__db.tags, summary=__summary.ADD_TAG
+    __db.prefix(id=True, add_tag=True), tags=__db.tags, summary=__summary.ADD_TAG
 )
 async def add_tag(
     current_user: Annotated[
@@ -153,7 +153,7 @@ async def add_tag(
 
 
 @router.delete(
-    __db.prefix(id=True, tag=True), tags=__db.tags, summary=__summary.RM_TAG
+    __db.prefix(id=True, rm_tag=True), tags=__db.tags, summary=__summary.RM_TAG
 )
 async def rm_tag(
     current_user: Annotated[
