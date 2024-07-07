@@ -328,7 +328,7 @@ class TestAPP:
                     _id = pytest.data[self.username][self.target]
                     _tag_id = pytest.data[self.username]["tag"]
             _url = f"/command/{_id}/{action}/{_tag_id}"
-            if self.make_response(client.post, url=_url):
+            if self.make_response(client.post, url=_url, with_data=False):
                 _json = self.response.json()
                 assert "action" in _json
                 assert _json["action"] == self.action
@@ -355,7 +355,7 @@ class TestAPP:
             self.init(locals())
             _id = pytest.data[self.username][self.target]
             _url = f"/workflow/{_id}/{execution}"
-            if self.make_response(client.put, url=_url):
+            if self.make_response(client.put, url=_url, with_data=False):
                 _json = self.response.json()
                 assert "action" in _json
                 assert _json["action"] == self.action
