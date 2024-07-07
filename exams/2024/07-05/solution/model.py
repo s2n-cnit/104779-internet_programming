@@ -23,7 +23,7 @@ class BasePublic(SQLModel):
         sa_column_kwargs={"onupdate": datetime.now},
     )
     created_by_id: Optional[str] = Field(foreign_key="user.id")
-    updated_by_id: Optional[str] | None = Field(foreign_key="user.id")
+    updated_by_id: Optional[str] = Field(foreign_key="user.id")
 
 
 # CommandTag
@@ -133,8 +133,10 @@ class CommandPublic(CommandCreate, BasePublic):
         sa_column=Column("id", Integer, primary_key=True, autoincrement=True)
     )
     started_at: Optional[datetime] = Field(default=None)
+    started_by_id: Optional[str] = Field(foreign_key="user.id")
     completed_at: Optional[datetime] = Field(default=None)
     stopped_at: Optional[datetime] = Field(default=None)
+    stopped_by_id: Optional[str] = Field(foreign_key="user.id")
     status: CommandStatus = Field(default=CommandStatus.NOT_EXECUTED)
 
 

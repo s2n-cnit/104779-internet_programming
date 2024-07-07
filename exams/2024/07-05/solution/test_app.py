@@ -48,8 +48,11 @@ class TestAPP:
         return f"/{self.role}/{self.target}{end}"
 
     def is_action_ok(self: Self) -> bool:
-        return ("-NF" not in self.action and "-NC" not in self.action and
-                self.status_code == status.HTTP_200_OK)
+        return (
+            "-NF" not in self.action
+            and "-NC" not in self.action
+            and self.status_code == status.HTTP_200_OK
+        )
 
     def check_auth(self: Self) -> bool:
         if self.role == "admin" and self.username != "admin":
@@ -138,10 +141,9 @@ class TestAPP:
             params = {}
         self.init(locals())
         _url = self.get_url()
-        if self.make_response(client.post,
-                              url=_url,
-                              with_data=True,
-                              params=params):
+        if self.make_response(
+            client.post, url=_url, with_data=True, params=params
+        ):
             self.check_result("Created")
 
     @pytest.mark.parametrize(
@@ -221,10 +223,9 @@ class TestAPP:
             params = {}
         self.init(locals())
         _url = self.get_url(end=f"/{self.get_id()}")
-        if self.make_response(client.put,
-                              url=_url,
-                              with_data=True,
-                              params=params):
+        if self.make_response(
+            client.put, url=_url, with_data=True, params=params
+        ):
             self.check_result("Updated")
 
     @pytest.mark.parametrize(
@@ -269,13 +270,17 @@ class TestAPP:
         action: str,
         status_code: int,
     ) -> None:
-        self.init(**locals())
-        _id = pytest.data[self.username][self.target]
-        _response = client.put(f"/workflow/{_id}/{execution}",
-                               headers=auth_header)
-        if self.check_auth():
-            assert self.response.status_code == self.status_code
-            assert self.response.headers["Content-Type"] == "application/json"
-            _json = _response.json()
-            assert "action" in _json
-            assert _json["action"] == self.action
+        if target == "workflow-command":
+            self.init(**locals())
+            _id = pytest.data[self.username][self.target]
+            _response = client.put(
+                f"/workflow/{_id}/{execution}", headers=auth_header
+            )
+            if self.check_auth():
+                assert self.response.status_code == self.status_code
+                assert (
+                    self.response.headers["Content-Type"] == "application/json"
+                )
+                _json = _response.json()
+                assert "action" in _json
+                assert _json["action"] == self.action
