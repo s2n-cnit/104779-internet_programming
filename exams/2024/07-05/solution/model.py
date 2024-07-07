@@ -168,20 +168,6 @@ class Command(CommandPublic, table=True):
             "lazy": "joined",
         },
     )
-    started_by: "User" = Relationship(
-        back_populates="commands_started",
-        sa_relationship_kwargs={
-            "primaryjoin": "Command.started_by_id==User.id",
-            "lazy": "joined",
-        },
-    )
-    stopped_by: "User" = Relationship(
-        back_populates="commands_stopped",
-        sa_relationship_kwargs={
-            "primaryjoin": "Command.stopped_by_id==User.id",
-            "lazy": "joined",
-        },
-    )
 
     def start(self: Self) -> None:
         if self.status == CommandStatus.STARTED:
@@ -229,27 +215,7 @@ class RolePublic(RoleCreate, BasePublic):
 
 
 class Role(RolePublic, table=True):
-    users: List["User"] = Relationship(
-        back_populates="role",
-        sa_relationship_kwargs={
-            "primaryjoin": "Role.id==User.role_id",
-            "lazy": "joined",
-        },
-    )
-    created_by: "User" = Relationship(
-        back_populates="roles_created",
-        sa_relationship_kwargs={
-            "primaryjoin": "Role.created_by_id==User.id",
-            "lazy": "joined",
-        },
-    )
-    updated_by: "User" = Relationship(
-        back_populates="roles_updated",
-        sa_relationship_kwargs={
-            "primaryjoin": "Role.updated_by_id==User.id",
-            "lazy": "joined",
-        },
-    )
+    pass
 
 
 # User
@@ -353,38 +319,10 @@ class User(UserCreate, BasePublic, table=True):
             "lazy": "joined",
         },
     )
-    commands_started: list["Command"] = Relationship(
-        back_populates="started_by",
-        sa_relationship_kwargs={
-            "primaryjoin": "Command.stopped_by_id==User.id",
-            "lazy": "joined",
-        },
-    )
-    commands_stopped: list["Command"] = Relationship(
-        back_populates="stopped_by",
-        sa_relationship_kwargs={
-            "primaryjoin": "Command.stopped_by_id==User.id",
-            "lazy": "joined",
-        },
-    )
     role: Role = Relationship(
         back_populates="users",
         sa_relationship_kwargs={
             "primaryjoin": "User.role_id==Role.id",
-            "lazy": "joined",
-        },
-    )
-    roles_created: list["Role"] = Relationship(
-        back_populates="created_by",
-        sa_relationship_kwargs={
-            "primaryjoin": "Role.created_by_id==User.id",
-            "lazy": "joined",
-        },
-    )
-    roles_updated: list["Role"] = Relationship(
-        back_populates="updated_by",
-        sa_relationship_kwargs={
-            "primaryjoin": "Role.updated_by_id==User.id",
             "lazy": "joined",
         },
     )
