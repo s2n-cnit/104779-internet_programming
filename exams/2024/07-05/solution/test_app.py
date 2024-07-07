@@ -327,15 +327,9 @@ class TestAPP:
                 case CommandTagGoal.COMMAND_TAG_NOT_FOUND:
                     _id = pytest.data[self.username][self.target]
                     _tag_id = pytest.data[self.username]["tag"]
-                case CommandTagGoal.COMMAND_TAG_FOUND:
-                    _id = pytest.data[self.username][self.target]
-                    _tag_id = pytest.data[self.username]["tag"]
-            _response = client.put(f"/command/{_id}/{action}/{_tag_id}",
-                                   headers=auth_header)
-            if self.check_auth():
-                assert _response.status_code == self.status_code
-                assert _response.headers["Content-Type"] == "application/json"
-                _json = _response.json()
+            _url = f"/command/{_id}/{action}/{_tag_id}"
+            if self.make_response(client.post, url=_url, with_data=False):
+                _json = self.response.json()
                 assert "action" in _json
                 assert _json["action"] == self.action
 
@@ -360,11 +354,8 @@ class TestAPP:
         if target == "workflow":
             self.init(locals())
             _id = pytest.data[self.username][self.target]
-            _response = client.put(f"/workflow/{_id}/{execution}",
-                                   headers=auth_header)
-            if self.check_auth():
-                assert _response.status_code == self.status_code
-                assert _response.headers["Content-Type"] == "application/json"
-                _json = _response.json()
+            _url = f"/workflow/{_id}/{execution}"
+            if self.make_response(client.put, url=_url, with_data=False):
+                _json = self.response.json()
                 assert "action" in _json
                 assert _json["action"] == self.action
