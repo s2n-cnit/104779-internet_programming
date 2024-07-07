@@ -355,7 +355,7 @@ class TestAPP:
             self.init(locals())
             _id = pytest.data[self.username][self.target]
             _url = f"/workflow/{_id}/{execution}"
-            if self.make_response(client.put, url=_url)
+            if self.make_response(client.put, url=_url):
                 _json = self.response.json()
                 assert "action" in _json
                 assert _json["action"] == self.action
