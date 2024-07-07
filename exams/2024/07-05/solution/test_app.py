@@ -330,9 +330,8 @@ class TestAPP:
             _response = client.put(f"/command/{_id}/{action}/{_tag_id}",
                                    headers=auth_header)
             if self.check_auth():
-                assert self.response.status_code == self.status_code
-                assert (self.response.headers["Content-Type"] ==
-                        "application/json")
+                assert _response.status_code == self.status_code
+                assert _response.headers["Content-Type"] == "application/json"
                 _json = _response.json()
                 assert "action" in _json
                 assert _json["action"] == self.action
@@ -361,9 +360,8 @@ class TestAPP:
             _response = client.put(f"/workflow/{_id}/{execution}",
                                    headers=auth_header)
             if self.check_auth():
-                assert self.response.status_code == self.status_code
-                assert (self.response.headers["Content-Type"] ==
-                        "application/json")
+                assert _response.status_code == self.status_code
+                assert _response.headers["Content-Type"] == "application/json"
                 _json = _response.json()
                 assert "action" in _json
                 assert _json["action"] == self.action
