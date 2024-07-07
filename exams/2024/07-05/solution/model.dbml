@@ -39,11 +39,24 @@ Table Workflow {
 Ref: Workflow.created_by_id > User.id
 Ref: Workflow.updated_by_id > User.id
 
+enum CommandStatus {
+    completed
+    started
+    stopped
+    not_executed
+}
+
+
 Table Command {
   id integer [primary key]
   path varchar
   category_id varchar
+  started_at timestamp
+  started_by_id varchar
   completed_at timestamp
+  stopped_at timestamp
+  stopped_by_id varchar
+  status CommandStatus
   created_by_id varchar
   created_at timestamp
   updated_by_id varchar

@@ -166,6 +166,20 @@ class Command(CommandPublic, table=True):
             "lazy": "joined",
         },
     )
+    started_by: "User" = Relationship(
+        back_populates="commands_started",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.started_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    stopped_by: "User" = Relationship(
+        back_populates="commands_stopped",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.stopped_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
 
     def start(self: Self) -> None:
         if self.status == CommandStatus.STARTED:
@@ -334,6 +348,20 @@ class User(UserCreate, BasePublic, table=True):
         back_populates="updated_by",
         sa_relationship_kwargs={
             "primaryjoin": "Command.updated_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    commands_started: list["Command"] = Relationship(
+        back_populates="started_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.stopped_by_id==User.id",
+            "lazy": "joined",
+        },
+    )
+    commands_stopped: list["Command"] = Relationship(
+        back_populates="stopped_by",
+        sa_relationship_kwargs={
+            "primaryjoin": "Command.stopped_by_id==User.id",
             "lazy": "joined",
         },
     )
