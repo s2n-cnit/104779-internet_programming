@@ -26,7 +26,7 @@ class BaseException(Exception):
                 id=self.id,
                 error=True,
                 success=False,
-                # timestamp=datetime.now(), # FIXME not JSON serializable
+                timestamp=datetime.now()
             ),
         )
 

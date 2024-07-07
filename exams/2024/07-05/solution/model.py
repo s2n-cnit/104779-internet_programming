@@ -391,7 +391,7 @@ class Result(BaseModel):
     id: str | int
     success: bool
     error: bool
-    # timestamp: datetime # FIXME not JSON serializable
+    timestamp: datetime
 
     def __init__(
         self: Self,
@@ -404,7 +404,7 @@ class Result(BaseModel):
             action=action,
             target=target,
             id=id,
-            # timestamp=datetime.now(), # FIXME not JSON serializable
+            timestamp=datetime.now(),
             success=success,
             error=not success,
         )
