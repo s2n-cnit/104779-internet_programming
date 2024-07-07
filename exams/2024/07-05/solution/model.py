@@ -260,13 +260,6 @@ class User(UserCreate, BasePublic, table=True):
             "lazy": "joined",
         },
     )
-    workflow_commands_created: list["WorkflowCommand"] = Relationship(
-        back_populates="created_by",
-        sa_relationship_kwargs={
-            "primaryjoin": "WorkflowCommand.created_by_id==User.id",
-            "lazy": "joined",
-        },
-    )
     categories_created: list["Category"] = Relationship(
         back_populates="created_by",
         sa_relationship_kwargs={

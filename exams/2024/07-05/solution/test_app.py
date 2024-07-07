@@ -1,5 +1,6 @@
 import json
 import os
+from enum import Enum
 from typing import Self
 
 import pytest
@@ -12,6 +13,21 @@ from jinja2 import Template
 client = TestClient(app)
 
 field_check = dict(tag="name", category="name", command="path")
+
+# FIXME check if get only created by me (not for admin)
+
+
+class CommandTagAction(str, Enum):
+    ADD_TAG = "add-tag"
+    RM_TAG = "rm-tag"
+
+
+class CommandTagGoal(str, Enum):
+    OK = "Ok"
+    COMMAND_NOT_FOUND = "Command not found",
+    TAG_NOT_FOUND = "Tag not found"
+    COMMAND_TAG_FOUND = "Command - Tag found"
+    COMMAND_TAG_NOT_FOUND = "Command - Tag not found"
 
 
 @pytest.mark.parametrize(
@@ -46,11 +62,8 @@ class TestAPP:
         return f"/{self.role}/{self.target}{end}"
 
     def is_action_ok(self: Self) -> bool:
-        return (
-            "-NF" not in self.action
-            and "-NC" not in self.action
-            and self.status_code == status.HTTP_200_OK
-        )
+        return ("-NF" not in self.action and "-NC" not in self.action and
+                self.status_code == status.HTTP_200_OK)
 
     def check_auth(self: Self) -> bool:
         if self.role == "admin" and self.username != "admin":
@@ -141,9 +154,10 @@ class TestAPP:
             params = {}
         self.init(locals())
         _url = self.get_url()
-        if self.make_response(
-            client.post, url=_url, with_data=True, params=params
-        ):
+        if self.make_response(client.post,
+                              url=_url,
+                              with_data=True,
+                              params=params):
             self.check_result("Created")
 
     @pytest.mark.parametrize(
@@ -228,9 +242,10 @@ class TestAPP:
             params = {}
         self.init(locals())
         _url = self.get_url(end=f"/{self.get_id()}")
-        if self.make_response(
-            client.put, url=_url, with_data=True, params=params
-        ):
+        if self.make_response(client.put,
+                              url=_url,
+                              with_data=True,
+                              params=params):
             self.check_result("Updated")
 
     @pytest.mark.parametrize(
@@ -258,13 +273,76 @@ class TestAPP:
             self.check_result("Deleted")
 
     @pytest.mark.parametrize(
+        "action,goal,status_code",
+        [
+            (CommandTagAction.ADD_TAG, CommandTagGoal.OK, status.HTTP_200_OK),
+            (
+                CommandTagAction.ADD_TAG,
+                CommandTagGoal.COMMAND_NOT_FOUND,
+                status.HTTP_404_NOT_FOUND,
+            ),
+            (
+                CommandTagAction.ADD_TAG,
+                CommandTagGoal.TAG_NOT_FOUND,
+                status.HTTP_404_NOT_FOUND,
+            ),
+            (
+                CommandTagAction.ADD_TAG,
+                CommandTagGoal.COMMAND_TAG_FOUND,
+                status.HTTP_409_CONFLICT,
+            ),
+            (CommandTagAction.RM_TAG, CommandTagGoal.OK, status.HTTP_200_OK),
+            (
+                CommandTagAction.RM_TAG,
+                CommandTagGoal.COMMAND_TAG_NOT_FOUND,
+                status.HTTP_404_NOT_FOUND,
+            ),
+        ],
+    )
+    @pytest.mark.order(6)
+    def test_manage_tag(
+        self: Self,
+        username: str,
+        auth_header: dict,  # noqa: F811
+        role: str,
+        target: str,
+        action: str,
+        goal: str,
+        status_code: int,
+    ) -> None:
+        if target == "command":
+            self.init(**locals())
+            match goal:
+                case CommandTagGoal.OK:
+                    _id = pytest.data[self.username][self.target]
+                    _tag_id = pytest.data[self.username]["tag"]
+                case CommandTagGoal.COMMAND_NOT_FOUND:
+                    _id = 0
+                    _tag_id = pytest.data[self.username]["tag"]
+                case CommandTagGoal.TAG_NOT_FOUND:
+                    _id = pytest.data[self.username][self.target]
+                    _tag_id = 0
+                case CommandTagGoal.COMMAND_TAG_NOT_FOUND:
+                    _id = pytest.data[self.username][self.target]
+                    _tag_id = pytest.data[self.username]["tag"]
+            _response = client.put(f"/command/{_id}/{action}/{_tag_id}",
+                                   headers=auth_header)
+            if self.check_auth():
+                assert self.response.status_code == self.status_code
+                assert (self.response.headers["Content-Type"] ==
+                        "application/json")
+                _json = _response.json()
+                assert "action" in _json
+                assert _json["action"] == self.action
+
+    @pytest.mark.parametrize(
         "execution,action,status_code",
         [
             ("start", Action.STARTED, status.HTTP_200_OK),
             ("stop", Action.STOPPED, status.HTTP_200_OK),
         ],
     )
-    @pytest.mark.order(6)
+    @pytest.mark.order(7)
     def test_execution(
         self: Self,
         username: str,
@@ -275,17 +353,15 @@ class TestAPP:
         action: str,
         status_code: int,
     ) -> None:
-        if target == "workflow-command":
+        if target == "workflow":
             self.init(**locals())
             _id = pytest.data[self.username][self.target]
-            _response = client.put(
-                f"/workflow/{_id}/{execution}", headers=auth_header
-            )
+            _response = client.put(f"/workflow/{_id}/{execution}",
+                                   headers=auth_header)
             if self.check_auth():
                 assert self.response.status_code == self.status_code
-                assert (
-                    self.response.headers["Content-Type"] == "application/json"
-                )
+                assert (self.response.headers["Content-Type"] ==
+                        "application/json")
                 _json = _response.json()
                 assert "action" in _json
                 assert _json["action"] == self.action

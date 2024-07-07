@@ -138,9 +138,11 @@ def _execute(id: str, action: Action, current_user: User):
         match action:
             case Action.STARTED:
                 _t = command.start()
+                command.started_by_id = current_user
                 _waiting_execution(_t, command, current_user)
             case Action.STOPPED:
                 command.stop()
+                command.stopped_by_id = current_user
         __db.command.update(command.id, command, current_user)
     return Result(
         action=action,

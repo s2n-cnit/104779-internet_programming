@@ -1,13 +1,11 @@
 import admin.category  # noqa: F401
 import admin.command  # noqa: F401
-import admin.command_tag  # noqa: F401
 import admin.tag  # noqa: F401
 import admin.user  # noqa: F401
 import admin.workflow  # noqa: F401
 import auth  # noqa: F401
 import me.category  # noqa: F401
 import me.command  # noqa: F401
-import me.command_tag  # noqa: F401
 import me.tag  # noqa: F401
 import me.workflow  # noqa: F401
 from admin import router as router_admin

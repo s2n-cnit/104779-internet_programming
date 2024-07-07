@@ -50,7 +50,8 @@ enum CommandStatus {
 Table Command {
   id integer [primary key]
   path varchar
-  category_id varchar
+  workflow_id int
+  category_id int
   started_at timestamp
   started_by_id varchar
   completed_at timestamp
@@ -63,9 +64,12 @@ Table Command {
   updated_at timestamp
 }
 
+Ref: Command.workflow_id > Workflow.id
 Ref: Command.category_id > Category.id
 Ref: Command.created_by_id > User.id
 Ref: Command.updated_by_id > User.id
+Ref: Command.started_by_id > User.id
+Ref: Command.stopped_by_id > User.id
 
 Table Category {
   id integer [primary key]
@@ -105,18 +109,3 @@ Table CommandTag {
 
 Ref: CommandTag.command_id > Command.id
 Ref: CommandTag.tag_id > Tag.id
-
-Table WorkflowCommand {
-  id integer [primary key]
-  workflow_id integer
-  command_id integer [unique]
-  created_by_id varchar
-  created_at timestamp
-
-  Indexes {
-    (workflow_id, command_id) [unique]
-  }
-}
-
-Ref: WorkflowCommand.workflow_id > Workflow.id
-Ref: WorkflowCommand.command_id > Command.id
