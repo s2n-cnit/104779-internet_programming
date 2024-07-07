@@ -25,7 +25,7 @@ class __db:
         created: bool = False,
         updated: bool = False,
         add_tag: bool = False,
-        rm_tag: bool = True,
+        rm_tag: bool = False,
     ):
         return (
             "/command"
@@ -128,7 +128,9 @@ async def update(
 
 
 @router.put(
-    __db.prefix(id=True, add_tag=True), tags=__db.tags, summary=__summary.ADD_TAG
+    __db.prefix(id=True, add_tag=True),
+    tags=__db.tags,
+    summary=__summary.ADD_TAG,
 )
 async def add_tag(
     current_user: Annotated[
@@ -138,10 +140,7 @@ async def add_tag(
     tag_id: int,
 ):
     for command_tag in current_user.command_tags_created:
-        if (
-            command_tag.command_id == id
-            and command_tag.tag_id == tag_id
-        ):
+        if command_tag.command_id == id and command_tag.tag_id == tag_id:
             raise ConflictException(
                 target="CommandTag",
                 id=dict(command_id=id, tag_id=tag_id),
@@ -163,10 +162,7 @@ async def rm_tag(
     tag_id: int,
 ):
     for command_tag in current_user.command_tags_created:
-        if (
-            command_tag.command_id == id
-            and command_tag.tag_id == tag_id
-        ):
+        if command_tag.command_id == id and command_tag.tag_id == tag_id:
             return __db.command_tag.delete(command_tag.id)
     raise NotFoundException(
         target="CommandTag", id=dict(command_id=id, tag_id=tag_id)
