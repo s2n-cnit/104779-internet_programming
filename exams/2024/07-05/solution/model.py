@@ -65,7 +65,7 @@ class WorkflowPublic(WorkflowCreate, BasePublic):
 
 class Workflow(WorkflowPublic, table=True):
     commands: list["Command"] = Relationship(
-        back_populates="category",
+        back_populates="workflow",
         sa_relationship_kwargs={
             "primaryjoin": "Command.workflow_id==Workflow.id",
             "lazy": "joined",
