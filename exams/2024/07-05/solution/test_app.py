@@ -12,6 +12,8 @@ from jinja2 import Template
 
 client = TestClient(app)
 
+# TODO test if created, updated are from the user
+
 field_check = dict(tag="name", category="name", command="path")
 
 
