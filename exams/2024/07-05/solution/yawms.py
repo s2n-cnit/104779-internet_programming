@@ -1,3 +1,5 @@
+#!/usr/bin/env -S poetry run python
+
 import uvicorn
 from config import host, port
 
