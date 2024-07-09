@@ -1,5 +1,6 @@
-import importlib
+import ast
 import inspect
+import os
 import signal
 import sys
 import threading
@@ -78,7 +79,7 @@ def execute(cmd: str, logger: any, min_lines_warning: int) -> int:
         universal_newlines=True,
         shell=True,
     )
-    _res_lines = _result.stdout.split("\n")
+    _res_lines = list(filter(None, _result.stdout.split("\n")))
     if _result.returncode != 0:
         _callback = logger.error
     elif len(_res_lines) >= min_lines_warning:
@@ -86,8 +87,7 @@ def execute(cmd: str, logger: any, min_lines_warning: int) -> int:
     else:
         _callback = logger.success
     for r in _res_lines:
-        if r != "":
-            _callback(r)
+        _callback(r)
     return _result.returncode
 
 
@@ -115,19 +115,21 @@ def keyboard_interrupt(
         _forever.wait()
 
 
-def get_classes(module: str | ModuleType, prefix: str = ""):
-    if isinstance(module, str):
-        module = importlib.import_module(module)
-    objs = dir(module)
-
-    def select_class(obj: str) -> bool:
-        obj = getattr(module, obj)
-        return inspect.isclass(obj)
-
-    def add_prefix(obj: str) -> str:
-        return prefix + obj
-
-    return list(map(add_prefix, filter(select_class, objs)))
+def get_classes(file_path: str, with_module_name: bool = False):
+    if file_path.endswith(".py"):
+        with open(file_path, "r") as _src:
+            _parse = ast.parse(_src.read())
+            if with_module_name:
+                module_name, _ = os.path.splitext(os.path.basename(file_path))
+                _with_module_name = f"{module_name}."
+            else:
+                _with_module_name = ""
+            return [
+                f"{_with_module_name}{node.name}" for node in ast.walk(_parse)
+                if isinstance(node, ast.ClassDef)
+            ]
+    else:
+        raise SyntaxError(f"{file_path} not valid")
 
 
 def nothing():
@@ -137,6 +139,6 @@ def nothing():
 def exit_handler(logger: any, additional_callback: callable = nothing):
     def _exit():
         logger.warning("Terminating...")
-        nothing()
+        additional_callback()
 
     return _exit
