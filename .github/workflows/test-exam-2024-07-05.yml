@@ -29,7 +29,7 @@ jobs:
 
     - name: Init data
       working-directory: ./exams/2024/07-05/solution
-      run: poetry run python init_data.py
+      run: poetry run python yawms_init_data.py
 
     - name: Run tests
       working-directory: ./exams/2024/07-05/solution
