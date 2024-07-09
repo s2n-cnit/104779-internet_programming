@@ -1,3 +1,5 @@
+#!/usr/bin/env -S poetry run pytest
+
 import json
 import os
 from enum import Enum
@@ -62,11 +64,8 @@ class TestAPP:
         return f"/{self.role}/{self.target}{end}"
 
     def is_action_ok(self: Self) -> bool:
-        return (
-            "-NF" not in self.action
-            and "-NC" not in self.action
-            and self.status_code == status.HTTP_200_OK
-        )
+        return ("-NF" not in self.action and "-NC" not in self.action and
+                self.status_code == status.HTTP_200_OK)
 
     def check_auth(self: Self) -> bool:
         if self.role == "admin" and self.username != "admin":
@@ -161,9 +160,10 @@ class TestAPP:
             params = {}
         self.init(locals())
         _url = self.get_url()
-        if self.make_response(
-            client.post, url=_url, with_data=True, params=params
-        ):
+        if self.make_response(client.post,
+                              url=_url,
+                              with_data=True,
+                              params=params):
             self.check_result("Created")
 
     @pytest.mark.parametrize(
@@ -248,9 +248,10 @@ class TestAPP:
             params = {}
         self.init(locals())
         _url = self.get_url(end=f"/{self.get_id()}")
-        if self.make_response(
-            client.put, url=_url, with_data=True, params=params
-        ):
+        if self.make_response(client.put,
+                              url=_url,
+                              with_data=True,
+                              params=params):
             self.check_result("Updated")
 
     @pytest.mark.parametrize(
@@ -327,10 +328,8 @@ class TestAPP:
                 case CommandTagGoal.TAG_NOT_FOUND:
                     _id = pytest.data[self.username][self.target]
                     _tag_id = 0
-                case (
-                    CommandTagGoal.COMMAND_TAG_NOT_FOUND
-                    | CommandTagGoal.COMMAND_TAG_FOUND
-                ):
+                case (CommandTagGoal.COMMAND_TAG_NOT_FOUND |
+                      CommandTagGoal.COMMAND_TAG_FOUND):
                     _id = pytest.data[self.username][self.target]
                     _tag_id = pytest.data[self.username]["tag"]
             _url = f"/command/{_id}/{action}/{_tag_id}"
