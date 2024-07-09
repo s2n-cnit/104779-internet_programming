@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Self
 
 from fastapi import Request, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 
@@ -20,13 +21,15 @@ class BaseException(Exception):
     def response(self: Self) -> JSONResponse:
         return JSONResponse(
             status_code=self.status,
-            content=dict(
-                action=self.action,
-                target=self.target,
-                id=self.id,
-                error=True,
-                success=False,
-                timestamp=datetime.now()
+            content=jsonable_encoder(
+                dict(
+                    action=self.action,
+                    target=self.target,
+                    id=self.id,
+                    error=True,
+                    success=False,
+                    timestamp=datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+                )
             ),
         )
 
