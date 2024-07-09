@@ -98,7 +98,7 @@ def keyboard_interrupt(
     event.
 
     Parameters
-    callback (callable) -- if not None executed after the interruption
+    callback (callable) -- executed after the interruption
     return_code (int | None) -- if not None exit the program with this code
     waiting (bool) -- to wait the keyword interruption.
     """
@@ -128,3 +128,15 @@ def get_classes(module: str | ModuleType, prefix: str = ""):
         return prefix + obj
 
     return list(map(add_prefix, filter(select_class, objs)))
+
+
+def nothing():
+    pass
+
+
+def exit_handler(logger: any, additional_callback: callable = nothing):
+    def _exit():
+        logger.warning("Terminating...")
+        nothing()
+
+    return _exit

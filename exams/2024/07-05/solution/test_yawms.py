@@ -1,4 +1,4 @@
-#!/usr/bin/env -S poetry run pytest
+#!/usr/bin/env -S poetry -C /axc-mgmt/github/teaching/104779-internet_programming/exams/2024/07-05/solution run pytest
 
 import json
 import os
