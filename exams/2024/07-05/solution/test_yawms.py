@@ -26,7 +26,7 @@ class CommandTagAction(str, Enum):
 
 class CommandTagGoal(str, Enum):
     OK = "Ok"
-    COMMAND_NOT_FOUND = ("Command not found",)
+    COMMAND_NOT_FOUND = "Command not found"
     TAG_NOT_FOUND = "Tag not found"
     COMMAND_TAG_FOUND = "Command - Tag found"
     COMMAND_TAG_NOT_FOUND = "Command - Tag not found"
