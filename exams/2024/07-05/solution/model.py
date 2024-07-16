@@ -87,7 +87,7 @@ class Workflow(WorkflowPublic, table=True):
     )
 
     def check_not_empty(self: Self) -> Self:
-        if len(self.command) == 0:
+        if len(self.commands) == 0:
             raise EmptyException(target="Workflow", id=self.id)
         return self
 
