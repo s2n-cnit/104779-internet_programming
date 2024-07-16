@@ -146,7 +146,7 @@ async def add_tag(
                 id=dict(command_id=id, tag_id=tag_id),
             )
     __db.command.read_personal(id, current_user.commands_created)
-    __db.tag.read_personal(id, current_user.tags_created)
+    __db.tag.read_personal(tag_id, current_user.tags_created)
     command_tag = CommandTag(command_id=id, tag=tag_id)
     return __db.command_tag.create(command_tag, current_user)
 

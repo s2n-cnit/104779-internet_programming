@@ -1,10 +1,5 @@
 #!/usr/bin/env -S poetry -C /axc-mgmt/github/teaching/104779-internet_programming/exams/2024/07-05/solution run python
 
-# import os
-
-# db_filepath = "yalb.db"
-# if os.path.exists(db_filepath):
-#     os.remove(db_filepath)
 import os
 from datetime import datetime  # noqa: E402
 
