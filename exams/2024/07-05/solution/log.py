@@ -3,7 +3,6 @@ import sys
 
 from loguru import logger
 
-# FIXME where to place
 logging.getLogger("passlib").setLevel(logging.ERROR)
 
 SEP = ", "

@@ -25,6 +25,7 @@ def auth_request(username: str, password: str):
         assert token in _json
     return Struct(**project(_json, _tokens))
 
+
 @pytest.fixture()
 def auth_header(auth_request):
     return {"Authorization": f"Bearer {auth_request.access_token}"}
